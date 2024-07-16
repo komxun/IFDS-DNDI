@@ -1,0 +1,75 @@
+% .-------------------------------------------------------------.
+% | Dynamic Autorouting Program for Multi-Agent Systems v.3.4   |
+% | created by Komsun Tamanakijprasart and Dr.Sabyasachi Mondal |
+% '-------------------------------------------------------------'
+
+function pos2Follow = CreateFormation(obj, XL, no_uav, option)
+    
+    pos2Follow = zeros(3,5);
+    switch option
+        case 1 % Diagonal Line
+            for i = 1:1:no_uav 
+%                 pos2Follow(:,i) = [XL(1) - 2*(-1)^i*i*1 ; 
+%                                    XL(2) + 4*(-1)^(i+1)*i*1; 
+%                                    XL(3) + 3*(-1)^(i+1)*i*1];
+                pos2Follow(:,i) = [XL(1) - 6*(-1)^i*i*1 ; 
+                               XL(2) + 12*(-1)^(i+1)*i*1; 
+                               XL(3) + 9*(-1)^(i+1)*i*1];
+            end
+
+        case 2  % Star
+            % only for no_uav = 5
+            d = 15;  % 15
+            if no_uav == 5
+                pos2Follow(:,1) = XL' + [0; -d*cosd(18); +d*sind(18)];
+                pos2Follow(:,2) = XL' + [0; 0; +d];
+                pos2Follow(:,3) = XL' + [0; +d*cosd(18); +d*sind(18)];
+                pos2Follow(:,4) = XL' + [0; +d*cosd(54); -d*sind(54)];
+                pos2Follow(:,5) = XL' + [0; -d*cosd(54); -d*sind(54)];
+            else
+                error("Number of UAVs must be 5 for this formation")
+            end
+        case 3 % Triangle
+            d = 30;
+            if no_uav == 5
+                pos2Follow(:,1) = XL' + [0; 0; +d];
+                pos2Follow(:,2) = XL' + [0; -d/2; +d/2];
+                pos2Follow(:,3) = XL' + [0; +d/2; +d/2];
+                pos2Follow(:,4) = XL' + [0; -d; 0];
+                pos2Follow(:,5) = XL' + [0; +d; 0];
+            else
+                error("Number of UAVs must be 5 for this formation")
+            end
+
+        case 4 % Clock-wise Twisting star
+            % only for no_uav = 5
+            d = 20;
+            if no_uav == 5
+                pos2Follow(:,1) = XL' + [0; +d*sind(0 + obj.rt); +d*cosd(0 + obj.rt)];
+                pos2Follow(:,2) = XL' + [0; +d*cosd(18 - obj.rt); +d*sind(18 - obj.rt)];
+                pos2Follow(:,3) = XL' + [0; +d*cosd(54 + obj.rt); -d*sind(54 + obj.rt)];
+                pos2Follow(:,4) = XL' + [0; -d*cosd(54 - obj.rt); -d*sind(54 - obj.rt)];
+                pos2Follow(:,5) = XL' + [0; -d*cosd(18 + obj.rt); +d*sind(18 + obj.rt)];
+            else
+                error("Number of UAVs must be 5 for this formation")
+            end
+        case 5 % Clockwise-Twisting star (large radius)
+            d = 60;
+            if no_uav == 5
+                pos2Follow(:,1) = XL' + [0; +d*sind(0 + obj.rt); +d*cosd(0 + obj.rt)];
+                pos2Follow(:,2) = XL' + [0; +d*cosd(18 - obj.rt); +d*sind(18 - obj.rt)];
+                pos2Follow(:,3) = XL' + [0; +d*cosd(54 + obj.rt); -d*sind(54 + obj.rt)];
+                pos2Follow(:,4) = XL' + [0; -d*cosd(54 - obj.rt); -d*sind(54 - obj.rt)];
+                pos2Follow(:,5) = XL' + [0; -d*cosd(18 + obj.rt); +d*sind(18 + obj.rt)];
+            else
+                error("Number of UAVs must be 5 for this formation")
+            end
+        case 6 % Horizontal Line with equal y-distance
+            for i = 1:1:no_uav 
+                pos2Follow(:,i) = [XL(1); 
+                               XL(2) + 9*(-1)^(i+1)*i*1; 
+                               XL(3)];
+            end
+    end
+
+end
