@@ -7,7 +7,6 @@ function DynamicAutorouting(obj)
     DA = obj.DA;
     rt = obj.rt;
     Param = DA.Param;
-
     x_i = obj.itsCurrentPos(1);
     y_i = obj.itsCurrentPos(2);
     z_i = obj.itsCurrentPos(3);
@@ -23,6 +22,9 @@ function DynamicAutorouting(obj)
     traj = DA.traj;
     Paths = DA.Paths;
     Object = DA.Object;
+    WMCell = DA.WMCell;
+    dwdxCell = DA.dwdxCell;
+    dwdyCell = DA.dwdyCell;
     
     % Constants
     rho0 = DA.Param.rho0_initial;
@@ -37,6 +39,18 @@ function DynamicAutorouting(obj)
     numLine = size(destin,1);
     rt2 = ceil(rt/10);
 tic
+    if obj.env == "static" 
+        if obj.rt == 1
+            disp("* " + obj.name + ": Using Global Static Path")
+            Wp(:,1) = [Xini; Yini; Zini];
+            [Paths, Object, ~, foundPath] = obj.IFDS(rho0, sigma0, destin, 1, Wp, Paths, Param, Object, WMCell{1}, dwdxCell{1}, dwdyCell{1});
+            ifdsPaths = Paths{1};
+        else
+            ifdsPaths = Paths{1};
+            foundPath = 1;
+        end
+        
+    end
 
     if norm([x_i y_i z_i] - destin) < targetThresh  % [m]
         disp(obj.name + ": Destination reached at t = " + num2str(rt/100) + " s")
@@ -70,40 +84,47 @@ tic
 
     else
 %         obj.flagDestinReached = 0;
-        if scene == 41 || scene == 42  || scene == 43 || class(obj) == "FollowerUAV"
-            % Wp(:,1) = [x_i; y_i; z_i];      % UAV's current position
+        if obj.env == "dynamic"
+            % disp("* " + obj.name + ": Using Local Dynamic Path")
             Wp(:,1) = obj.itsCurrentPos;
-        else
-            Wp(:,1) = [Xini; Yini; Zini];  % Starting Location
+            %_____________________IFDS Path Calculation_______________________
+            %------------Global Path Optimization-------------
+            if useOptimizer == 1
+               [rho0, sigma0] = path_optimizing(obj, destin, rt, Wp, Paths, Param, Object);
+            end
+            %------------------------------------------------
+            % Compute the IFDS Algorithm
+            [Paths, Object, ~, foundPath] = obj.IFDS(rho0, sigma0, destin, 1, Wp, Paths, Param, Object, WMCell{1}, dwdxCell{1}, dwdyCell{1});
+            if (foundPath ~= 1 || isempty(Paths{1})) % || size(Paths{rt},2)==1 
+                disp("#### CAUTION ####" + obj.name + ":  - Path not found at t = " +num2str(rt/100) + " s")
+                disp("#### " + obj.name + " is standing by ####")
+            else
+                % ifdsPaths = Paths{rt};
+                ifdsPaths = Paths{1};
+            end   
         end
-    
-        %_____________________IFDS Path Calculation_______________________
-        %------------Global Path Optimization-------------
-        if useOptimizer == 1
-           [rho0, sigma0] = path_optimizing(obj, destin, rt, Wp, Paths, Param, Object);
-        end
-        %------------------------------------------------
-        % Compute the IFDS Algorithm
-        [Paths, Object, ~, foundPath] = obj.IFDS(rho0, sigma0, destin, rt, Wp, Paths, Param, Object);
-    
+
         %_______________________CCA3D Calculation__________________________
-        if foundPath ~= 1 || isempty(Paths) % || size(Paths{rt},2)==1 
-            disp(obj.name + ": CAUTION - Path not found at t = " +num2str(rt/100) + " s")
-            disp("*" + obj.name + " is standing by*")
-        else
+     
+        if foundPath == 1
             % Compute Path Following Algorithm
-            trajectory = zeros(3, length(Paths{rt}));
+            trajectory = zeros(3, length(ifdsPaths));
             trajectory(:,1) = [x_i; y_i; z_i];
 
             count = 1;
             dtcum = 0;
             
-            for j = 1:length(Paths{rt})-1
-                if dtcum >= 0.01
+            
+            for j = 1:length(ifdsPaths)-1
+                % if dtcum > obj.DA.Param.dt  % before: 0.01
+                if dtcum > 0.01   % this is how frequent the path get updated (with respond to dynamic obstacle)
+                    trajectory(:,count+1) = [x(end); y(end); z(end)];
+                    count = count+1;
                     break
                 end 
-                Wi = Paths{rt}(:,j);
-                Wf = Paths{rt}(:,j+1);
+
+                Wi = ifdsPaths(:,j);
+                Wf = ifdsPaths(:,j+1);
                 
                 path_vect = Wf - Wi;
                 a = path_vect(1);
@@ -120,11 +141,17 @@ tic
                     gamma_i = gamma(end);
                     dtcum = dtcum + timeSpent;
                   
-                    trajectory(:,count+1) = [x(end); y(end); z(end)];
-                    count = count+1;
+                    % trajectory(:,count+1) = [x(end); y(end); z(end)];
+                    % count = count+1;
                 else
                     % skip waypoint
                 end   
+
+                if j==length(ifdsPaths)-1
+                    disp(obj.name + ": reached the final waypoint at t = " + num2str(rt/100) + " s")
+                    obj.SetFlagDestin(1)
+                    break
+                end
             end
 
         
@@ -138,7 +165,6 @@ tic
             % Save new states
             obj.itsCurrentPos = [x_i, y_i, z_i];
             obj.itsCurrentAngle = [psi_i, gamma_i];
-
             DA.Wp = Wp;
             DA.Paths = Paths;
             DA.Object = Object;

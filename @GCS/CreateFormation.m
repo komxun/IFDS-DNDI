@@ -3,8 +3,14 @@
 % | created by Komsun Tamanakijprasart and Dr.Sabyasachi Mondal |
 % '-------------------------------------------------------------'
 
-function pos2Follow = CreateFormation(obj, XL, no_uav, option)
-    
+function pos2Follow = CreateFormation(obj, XL, no_uav, leaderAngle, option)
+    psi = leaderAngle(1);
+    gamma = leaderAngle(2);
+    B2E = rot3(-psi) * rot2(-gamma);  % Body-to-Earth
+    E2B = inv(B2E);
+    % XL = XL.';
+    XL = E2B * XL';
+
     pos2Follow = zeros(3,5);
     switch option
         case 1 % Diagonal Line
@@ -21,22 +27,24 @@ function pos2Follow = CreateFormation(obj, XL, no_uav, option)
             % only for no_uav = 5
             d = 15;  % 15
             if no_uav == 5
-                pos2Follow(:,1) = XL' + [0; -d*cosd(18); +d*sind(18)];
-                pos2Follow(:,2) = XL' + [0; 0; +d];
-                pos2Follow(:,3) = XL' + [0; +d*cosd(18); +d*sind(18)];
-                pos2Follow(:,4) = XL' + [0; +d*cosd(54); -d*sind(54)];
-                pos2Follow(:,5) = XL' + [0; -d*cosd(54); -d*sind(54)];
+                pos2Follow(:,1) = XL + [0; -d*cosd(18); +d*sind(18)];
+                pos2Follow(:,2) = XL + [0; 0; +d];
+                pos2Follow(:,3) = XL + [0; +d*cosd(18); +d*sind(18)];
+                pos2Follow(:,4) = XL + [0; +d*cosd(54); -d*sind(54)];
+                pos2Follow(:,5) = XL + [0; -d*cosd(54); -d*sind(54)];
+                
             else
                 error("Number of UAVs must be 5 for this formation")
             end
         case 3 % Triangle
             d = 30;
             if no_uav == 5
-                pos2Follow(:,1) = XL' + [0; 0; +d];
-                pos2Follow(:,2) = XL' + [0; -d/2; +d/2];
-                pos2Follow(:,3) = XL' + [0; +d/2; +d/2];
-                pos2Follow(:,4) = XL' + [0; -d; 0];
-                pos2Follow(:,5) = XL' + [0; +d; 0];
+                pos2Follow(:,1) = XL + [0; 0; +d];
+                pos2Follow(:,2) = XL + [0; -d/2; +d/2];
+                pos2Follow(:,3) = XL + [0; +d/2; +d/2];
+                pos2Follow(:,4) = XL + [0; -d; 0];
+                pos2Follow(:,5) = XL + [0; +d; 0];
+
             else
                 error("Number of UAVs must be 5 for this formation")
             end
@@ -65,11 +73,35 @@ function pos2Follow = CreateFormation(obj, XL, no_uav, option)
                 error("Number of UAVs must be 5 for this formation")
             end
         case 6 % Horizontal Line with equal y-distance
+            % d = 7;
+%             d = 50;
+%             d = 15;
+            % d = 1000;
+            d = 200;
             for i = 1:1:no_uav 
                 pos2Follow(:,i) = [XL(1); 
-                               XL(2) + 9*(-1)^(i+1)*i*1; 
+                               XL(2) + d*(-1)^(i+1)*i*1; 
                                XL(3)];
             end
     end
 
+    pos2Follow(:,1) = B2E*pos2Follow(:,1);
+                pos2Follow(:,2) = B2E*pos2Follow(:,2);
+                pos2Follow(:,3) = B2E*pos2Follow(:,3);
+                pos2Follow(:,4) = B2E*pos2Follow(:,4);
+                pos2Follow(:,5) = B2E*pos2Follow(:,5);
+
+end
+
+
+function out = rot3(x)
+    out = [cos(x) sin(x) 0; -sin(x) cos(x) 0; 0 0 1;];
+end
+
+function out = rot2(x)
+    out = [cos(x) 0 -sin(x); 0 1 0; sin(x) 0 cos(x)];
+end
+
+function out = rot1(x)
+    out = [1 0 0; 0 cos(x) sin(x); 0 -sin(x) cos(x)];
 end

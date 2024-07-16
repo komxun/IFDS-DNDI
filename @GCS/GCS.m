@@ -7,6 +7,17 @@ classdef GCS < handle
     properties (Access = public)
         numUAV (1,1) uint8
         rIPN (1,1) single = 6  % m
+        topo double
+        R map.rasterref.GeographicPostingsReference
+        lat0 (1,1) double
+        lon0 (1,1) double
+        h0 (1,1) double
+        data struct
+
+        WMCell cell
+        dwdxCell cell
+        dwdyCell cell
+        weatherMat
     end
 
     properties (Access = private)
@@ -19,7 +30,22 @@ classdef GCS < handle
     methods (Access = public)
 
         X = consensus_func(obj, X_nei, XL_pos_to_fol, XL_states, comms)
-        XL_pos_to_fol = CreateFormation(obj, XL, no_uav, option)
+        XL_pos_to_fol = CreateFormation(obj, XL, no_uav, leaderAngle, option)
+
+        function LoadTerrainData(obj)
+            tic
+            addpath("..\Restricted files\Terrain\")
+            fileName = "SalisburyP_LIDAR_2m.dem";
+            disp("GCS: Loading terrain data: " + fileName)
+            [ZZ, RR] = readgeoraster('SalisburyP_LIDAR_2m.dem','OutputType','double');
+            obj.topo = ZZ;
+            obj.R = RR;
+            obj.lat0 = 0.894164;
+            obj.lon0 = -0.038742;
+            obj.h0 = 0;
+            toc
+        end
+
         function SetTimeStep(obj, x)
             obj.rt = x;
         end

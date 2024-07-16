@@ -63,7 +63,8 @@ agent5.Initialize(conf)
 
 
 % Set different destination
-followerDestin = gcs.CreateFormation(leader.GetItsDestination, no_uav, formation);
+followerDestin = gcs.CreateFormation(leader.GetItsDestination, no_uav, leader.itsCurrentAngle, formation);
+
 ds1 = followerDestin(:,1)';
 ds2 = followerDestin(:,2)';
 ds3 = followerDestin(:,3)';
@@ -106,7 +107,7 @@ while true
     XL = leader.GetCurrentPos();
 
     % Create formation from leader's current position
-    pos2Fol = gcs.CreateFormation(XL, no_uav, formation);
+    pos2Fol = gcs.CreateFormation(XL, max_no_uav, leader.itsCurrentAngle, formation);
 
     % Compute Consensus-Formation-Following for followers
     X_nei = consensus_func(X_nei, pos2Fol, XL_states, no_uav);
