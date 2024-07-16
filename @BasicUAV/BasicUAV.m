@@ -189,7 +189,6 @@ classdef BasicUAV < handle   % < handle : pass the value by reference
 
         function SetItsPathOrigin(obj, x ,y ,z)
             pathOg = [x, y, z];
-            CheckValidPos(obj, x, y, z)
             oldOg = "(" + num2str(obj.itsPathOrigin(1)) + "," + num2str(obj.itsPathOrigin(2)) + ","...
                 + num2str(obj.itsPathOrigin(3)) + ")";
             newOg = "(" + num2str(x) + "," + num2str(y) + ","+ num2str(z) + ")";
@@ -231,19 +230,6 @@ classdef BasicUAV < handle   % < handle : pass the value by reference
 
         function IncrementTimeStep(obj)
             obj.rt = obj.rt + 1;
-        end
-
-        function CheckValidPos(obj, x, y, z)
-            mapSpan = obj.DA.Param.mapSpan;
-            % ELM = obj.DA.WMCell{1};
-            % z_terrain = ELM(x+1, y+mapSpan/2+1);
-            elevation =  GetTerrainElevation(obj, x, y, z);
-            if z < elevation
-                disp(obj.name + "ERROR: Invalid location: z = " +num2str(z) + ...
-                    " m, but terrain's altitude is " +num2str(elevation) + " m")
-%                 error("ERROR: Invalid location: z = " +num2str(z) + ...
-%                     " m, but terrain's altitude is " +num2str(z_terrain) + " m")
-            end
         end
 
         function CheckDanger(obj, Object)
