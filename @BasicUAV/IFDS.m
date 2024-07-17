@@ -1,4 +1,4 @@
-function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_final, rt, Wp, Paths, Param, Object, ELM, dwdx, dwdy)
+function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_final, rt, Wp, Paths, Param, Object)
 
     % Read the parameters
     simMode = Param.simMode;
@@ -7,11 +7,10 @@ function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_f
     targetThresh = Param.targetThresh;
     tsim = Param.tsim;
     dt = Param.dt;
-    C = obj.itsCruisingSpeed;
+    C = obj.cruisingSpeed;
     showDisp = Param.showDisp;
     useOptimizer = Param.useOptimizer;
     delta_g = Param.Rg;
-    mapSpan = Param.mapSpan;
 
     % Initialization
     xd = loc_final(1);
@@ -19,7 +18,6 @@ function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_f
     zd = loc_final(3);
 
     foundPath = 0;
-    dR = 10;   % Detection range
 
     switch simMode
         case 1 % Simulate by time
@@ -36,7 +34,6 @@ function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_f
                     break
                 else
                     % --------------- Weather constraints ------------
-                    Object = create_scene(scene, obj.DA.Object(1), xx, yy, zz, rt);
                     if k~=0
                         omega = weatherMat(xx+1, yy+101);
                         dwdx_now = dwdx(xx+1, yy+101);
@@ -75,111 +72,33 @@ function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_f
         case 2 % simulate by reaching distance
            
             t = 1;
-%             while true
-            for t = 1:tsim
-                % disp("IFDS step=" + num2str(t))
+            while true
                 xx = Wp(1,t);
                 yy = Wp(2,t);
                 zz = Wp(3,t);
 
-                % if t>10000
-                %     break
-                % end
-
-                targetThresh = C*dt + 10;
-
-                % elevationsInRadius = extractElevations(ELM.Values, round(xx)+1, round(yy)+ mapSpan/2+1, dR);
-                maxHeight = 0;
-                maxPeakOrigin = [];
-
-                % --------------Consider max peak as the object (increase computing time )----
-                % for ix = xx + 1 -dR/2 : xx + 1 +dR/2
-                %     for iy = yy + mapSpan/2 + 1 -dR/2 : yy + mapSpan/2 + 1 +dR/2
-                %         peakHeight = ELM(ix, iy);
-                %         if peakHeight > maxHeight && peakHeight > zz + 10 
-                %             maxPeakOrigin = [ix, iy, ELM(ix, iy)];
-                %             maxHeight = peakHeight;
-                %         end
-                %     end
-                % end
-                % elevInRadius = ELM( (xx + 1 -dR/2 : xx + 1 +dR/2),  (yy + mapSpan/2 + 1 -dR/2 : yy + mapSpan/2 + 1 +dR/2)  );
-                %---------------------------------------------------------------------------------
+                if t>10000
+                    break
+                end
                 
-                Object = create_scene(scene, Object, xx, yy, zz, rt);
-
-                if norm([xx yy zz] - [xd yd zd]) <= targetThresh || t==tsim
-                    disp(obj.name + ": Path found!")
+                if norm([xx yy zz] - [xd yd zd]) < targetThresh
+%                     disp(obj.name + ": Path found!")
                     Wp = Wp(:,1:t);
-                    % Paths{rt} = Wp;    % Save into cell array
-                    Paths{1} = Wp;    % Save into cell array
+%                     Paths{L,rt} = Wp;    % Save into cell array
+                    Paths{rt} = Wp;    % Save into cell array
                     foundPath = 1;
                     break
                 else
-                    % --------------- Terrain constraints ------------
-                    % spheroid = referenceEllipsoid('GRS 80');
-                    spheroid = wgs84Ellipsoid;
-                    [latNow, lonNow, hNow] = ned2geodetic(xx, yy, -zz, obj.lat0, obj.lon0, obj.h0, spheroid, 'radians');
-
-                    [I, J] = geographicToDiscrete(obj.R, latNow*180/pi, lonNow*180/pi);
-                    if isnan(I) || isnan(J)
-                        disp("#### Out of terrain data range. Assuming elevation = 0")
-                        elevation = 0;
-                        Gm = zz - elevation + 1;
-                        dGdx = -1;
-                        dGdy = -1;
-                        dGdz = 1;
-                        % nk = 0.001;
-                        % elevation = ELM(xx+1, yy+mapSpan/2+1);
-                        % Gm = exp(nk * zz * (zz - elevation));
-                        % dGdx = -nk * zz *exp(nk * zz * (zz - elevation)) * dwdx(xx+1, yy+mapSpan/2+1);
-                        % dGdy = -nk * zz *exp(nk * zz * (zz - elevation)) * dwdy(xx+1, yy+mapSpan/2+1);
-                        % dGdz = (nk*(zz - elevation) + nk*zz) * exp(nk * zz * (zz - elevation)) * dwdy(xx+1, yy+mapSpan/2+1);
-                    else
-                        terrainTuning =  2;
-                        switch terrainTuning
-                            case 1
-                                elevation = obj.topo(I, J);
-                                Gm = zz - elevation + 1;
-                                dGdx = -dwdx(I, J);
-                                dGdy = -dwdy(I, J);
-                                dGdz = 1;
-                            case 2
-                                nk = 0.001;
-                                elevation = obj.topo(I, J);
-                                Gm = exp(nk * zz * (zz - elevation));
-                                dGdx = -nk * zz *exp(nk * zz * (zz - elevation)) * dwdx(I, J);
-                                dGdy = -nk * zz *exp(nk * zz * (zz - elevation)) * dwdy(I, J);
-                                dGdz = (nk*(zz - elevation) + nk*zz) * exp(nk * zz * (zz - elevation)) * dwdy(I, J);
-                                
-                            case 3
-                                nk = 0.002;  % 0.001
-                                elevation = ELM(xx+1, yy+mapSpan/2+1);
-                                Gm = exp(nk * zz * (zz - elevation));
-                                dGdx = -nk * zz *exp(nk * zz * (zz - elevation)) * dwdx(xx+1, yy+mapSpan/2+1);
-                                dGdy = -nk * zz *exp(nk * zz * (zz - elevation)) * dwdy(xx+1, yy+mapSpan/2+1);
-                                dGdz = (nk*(zz - elevation) + nk*zz) * exp(nk * zz * (zz - elevation)) * dwdy(xx+1, yy+mapSpan/2+1);
-                        end
-                
-                    end   
-    
-                    nn = [dGdx; dGdy; dGdz];
-                    tt = [dGdy; -dGdx; 0];
-
-                    Object(end).Gamma = Gm;
-                    Object(end).n = nn;
-                    Object(end).t = tt;
-
-   
-    
-                    [UBar, rho0, sigma0] = calc_ubar(obj, xx, yy, zz, xd, yd, zd, Object, rho0, sigma0, useOptimizer, delta_g, C, sf, t, maxPeakOrigin);
-                    
+                    [UBar, rho0, sigma0] = calc_ubar(xx, yy, zz, xd, yd, zd, ...
+                        Object, rho0, sigma0, useOptimizer, delta_g, C, sf, t);
                     Wp(:,t+1) = Wp(:,t) + UBar * dt;
                 end
-                % t = t+1;
+                t = t+1;
             end
             
     end
 
+    % obj.DA.Object = Object;
 
     %======================= post-Calculation =============================
 %     if foundPath == 1
@@ -201,75 +120,58 @@ function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_f
 
 end
 
-function [UBar, rho0, sigma0]  = calc_ubar(obj, X, Y, Z, xd, yd, zd, Object, rho0, sigma0, useOptimizer, delta_g, C, sf, time, maxPeakOrigin)
+function [UBar, rho0, sigma0]  = calc_ubar(X, Y, Z, xd, yd, zd, Obj, rho0, sigma0, useOptimizer, delta_g, C, sf, time)
 
     dist = sqrt((X - xd)^2 + (Y - yd)^2 + (Z - zd)^2);
+
     u = -[C*(X - xd)/dist, C*(Y - yd)/dist, C*(Z - zd)/dist]';
     
-    % Pre-allocation
-    numObj = size(Object,2);
+    %% Pre-allocation
+    numObj = size(Obj,2);
     Mm = zeros(3);
     sum_w = 0;
 
     for j = 1:numObj
 
         % Reading Gamma for each object
-        Gamma = Object(j).Gamma;
+        Gamma = Obj(j).Gamma;
         
         % Unit normal vector and Unit tangential vector
-        n = Object(j).n; 
-        t = Object(j).t;
+        n = Obj(j).n; 
+        t = Obj(j).t;
     
         % Object Distance from UAV
-        % dist_obj = 1;
-        % if ~isempty(maxPeakOrigin) == 1
-        %     disp(obj.name + ": High mountain peak detected!!. . . at t = " + num2str(obj.rt))
-        %     x0 = maxPeakOrigin(1);
-        %     y0 = maxPeakOrigin(2);
-        %     z0 = maxPeakOrigin(3);
-        % 
-        %     dist_obj = sqrt((X - x0)^2 + (Y - y0)^2 + (Z - z0)^2);
-        % end
+        x0 = Obj(j).origin(1);
+        y0 = Obj(j).origin(2);
+        z0 = Obj(j).origin(3);
 
-        if j == numObj
-            dist_obj = 1;   % For terrain
-        else
-            % x0 = Object(j).origin(time, 1);
-            % y0 = Object(j).origin(time, 2);
-            % z0 = Object(j).origin(time, 3);
-
-            x0 = Object(j).origin(1, 1);
-            y0 = Object(j).origin(1, 2);
-            z0 = Object(j).origin(1, 3);
-            dist_obj = sqrt((X - x0)^2 + (Y - y0)^2 + (Z - z0)^2);
-        end
+        dist_obj = sqrt((X - x0)^2 + (Y - y0)^2 + (Z - z0)^2);
 
         % Modular Matrix (Perturbation Matrix
         ntu = n' * u;
         if ntu < 0 || sf == 1
-
             % ---- optimize the rho0, sigma0 for each object
-            % if useOptimizer == 2
-            %     if mod(time,5)==0 % optimize every 5 waypoints
-            %         [rho0, sigma0] = path_opt2(Gamma, n, t, u, dist, dist_obj, rho0, sigma0);
-            %     end
-            % end
+            if useOptimizer == 2
+                if mod(time,5)==0 % optimize every 5 waypoints
+                    [rho0, sigma0] = path_opt2(Gamma, n, t, u, dist, dist_obj, rho0, sigma0);
+                end
+            end
             % ---------------------------------------------------
             
-            rho = rho0 * exp(1 - 1/(dist_obj * dist));
+%             if useOptimizer == 0
+                % Add Gap Constraint
+                Rstar = Obj(j).Rstar;
+                rho0_star = log(abs(Gamma))/(log(abs(Gamma - ((Rstar + delta_g)/Rstar)^2 + 1))) * rho0;
+                rho = rho0_star * exp(1 - 1/(dist_obj * dist));
+%             else
+%                 % Without SafeGuard
+%                 rho = rho0 * exp(1 - 1/(dist_obj * dist));
+%             end
+
             sigma = sigma0 * exp(1 - 1/(dist_obj * dist));
-            % rho = rho0 * exp(1 - 1/(dist));
-            % sigma = sigma0 * exp(1 - 1/(dist));
-
-
-            if norm(t) == 0
-                term2 = zeros(3);
-            else
-                term2 = t*n'/(abs(Gamma)^(1/sigma)*norm(t)*norm(n));
-            end
 
             M = eye(3) - n*n'/(abs(Gamma)^(1/rho)*(n')*n)...
-            + term2;  % tao is removed for now
+            + t*n'/(abs(Gamma)^(1/sigma)*norm(t)*norm(n));  % tao is removed for now
         elseif ntu >= 0 && sf == 0
             M = eye(3);
         end  
@@ -280,30 +182,29 @@ function [UBar, rho0, sigma0]  = calc_ubar(obj, X, Y, Z, xd, yd, zd, Object, rho
             if i == j
                 continue
             else
-                w = w * (Object(i).Gamma - 1)/...
-                    ((Object(j).Gamma - 1) + (Object(i).Gamma - 1));
+                w = w * (Obj(i).Gamma - 1)/...
+                    ((Obj(j).Gamma - 1) + (Obj(i).Gamma - 1));
             end
         end
         sum_w = sum_w + w;
 
         % Saving to Field
-        Object(j).n = n;
-        Object(j).t = t;
-        % elm(j).dist = dist_obj;
+        Obj(j).n = n;
+        Obj(j).t = t;
+        Obj(j).dist = dist_obj;
 %         Obj(j).rho = rho;
 %         Obj(j).sigma = sigma;
-        Object(j).M  = M;
-        Object(j).w = w;
+        Obj(j).M  = M;
+        Obj(j).w = w;
     
     end
 
     for j = 1:numObj
-        Object(j).w_tilde = Object(j).w/sum_w;
-        Mm = Mm + Object(j).w_tilde * Object(j).M;
+        Obj(j).w_tilde = Obj(j).w/sum_w;
+        Mm = Mm + Obj(j).w_tilde * Obj(j).M;
     end
 
     UBar = Mm*u;
- 
 
     function [rho0, sigma0] = path_opt2(Gamma, n, t, u, dist, dist_obj, rho0, sigma0)
     
@@ -340,286 +241,4 @@ function [UBar, rho0, sigma0]  = calc_ubar(obj, X, Y, Z, xd, yd, zd, Object, rho
 
 end
 
-function Obj = create_scene(num, Obj, X, Y, Z, rt)
-    switch num
-        case 0
-            Obj(1) = create_ceiling(100, 0, 50, 200, 10, Obj(1));
 
-        case 1  % Single object
-            % Obj(1) = create_sphere(100, 5, 0, 50, Obj(1));
-            % Obj(1) = create_cone(100, 5, 0, 50, 80, Obj(1));
-            % Obj(1) = create_sphere(100, 180, 0, 50, Obj(1));
-
-            % Obj(1) = create_sphere(-4535.96, 29077.2, 180, 2000, Obj(1));  % don't forget swap x-y
-            xog = Obj(1).origin(1);
-            yog = Obj(1).origin(2);
-            zog = Obj(1).origin(3);
-            R = Obj(1).a;
-            Obj(1) = create_sphere(xog, yog, zog, R*2, Obj(1));
-
-            % Obj(1) = create_sphere(33966.46, -2963.129, 151.904, 3000, Obj(1));
-                            
-    
-        case 2 % 2 objects
-            Obj(1) = create_cone(90, 5, 0, 50, 80, Obj(1));
-            Obj(2) = create_cylinder(160, -20, 0, 40, 70, Obj(2));
-
-            % Obj(1) = create_cylinder(60, 5, 0, 30, 50, Obj(1));
-            % Obj(2) = create_sphere(120, -10, 0, 50, Obj(2));
-    
-        case 3 % 3 objects
-            Obj(1) = create_cylinder(60, 5, 0, 30, 50, Obj(1));
-            Obj(2) = create_sphere(120, -10, 0, 50, Obj(2));
-            Obj(3) = create_cone(168, 0, 0, 25, 80, Obj(3));
-
-        case 4 % single(complex) object
-            Obj(1) = create_cylinder(100, 5, 0, 25, 200, Obj(1));
-            Obj(2) = create_pipe(60, 20, 60, 80, 5, Obj(2));
-            Obj(3) = create_pipe(130, -30, 30, 100, 5, Obj(3));
-        case 5
-            Obj(1) = create_cylinder(50, -20, 0, 30, 50, Obj(1));
-            Obj(2) = create_cone(100, -20, 0, 30, 50, Obj(2));
-            Obj(3) = create_pipe(150, -20, 0, 30, 50, Obj(3));
-    
-        case 12 % 12 objects
-            Obj(1) = create_cylinder(100, 5, 0, 30, 50, Obj(1));
-            Obj(2) = create_pipe(140, 20, 0, 40,10, Obj(2));
-            Obj(3) = create_pipe(20, 20, 0, 24, 40, Obj(3));
-            Obj(4) = create_pipe(55, -20, 0, 28, 50, Obj(4));
-            Obj(5) = create_sphere(53, -60, 0, 50, Obj(5));
-            Obj(6) = create_pipe(150, -80, 0, 40, 50, Obj(6));
-            Obj(7) = create_cone(100, -35, 0, 50,45, Obj(7));
-            Obj(8) = create_cone(170, 2, 0, 20,50, Obj(8));
-            Obj(9) = create_cone(60, 35, 0, 50,30, Obj(9));
-            Obj(10) = create_cylinder(110, 70, 0, 60, 50, Obj(10));
-            Obj(11) = create_pipe(170, 60, 0, 40, 27, Obj(11));
-            Obj(12) = create_cone(150, -30, 0, 32, 45, Obj(12));
-        case 7 % 7 objects
-            Obj(1) = create_cone(60,8, 0, 70, 50, Obj(1));
-            Obj(2) = create_cone(100,-24, 0, 89, 100, Obj(2));
-            Obj(3) = create_cone(160,40, -4, 100, 30, Obj(3));
-            Obj(4) = create_cone(100,100, -10, 150, 100, Obj(4));
-            Obj(5) = create_cone(180,-70, -10, 150, 20, Obj(5));
-            Obj(6) = create_cone(75,-75, -10, 150, 40, Obj(6));
-            Obj(7) = create_cylinder(170, -6, 0, 34, 100, Obj(7));
-        case 41 % Dynamic case 1
-            Obj(1) = create_cylinder(100 + 50*sin(rt/8/50), 0 + 50*cos(rt/8/50), 0, 20, 80, Obj(1));
-            Obj(2) = create_sphere(100, 0, 0, 30, Obj(2));
-            Obj(3) = create_cylinder(100 - 50*sin(rt/8/50), 0 - 50*cos(rt/8/50), 0, 20, 50, Obj(3));
-
-        case 42 % Dynamic case 2
-            Oy1 = -5 + 60*cos(0.4*single(rt));
-            Oy2 = -20 - 20*sin(0.8*single(rt));
-            Oz2 =  60 + 20*cos(0.8*single(rt));
-            Obj(1) = create_cylinder(60, 5, 0, 30, 50, Obj(1));
-            Obj(2) = create_cylinder(110, -10, 0, 25, 80,Obj(2));
-            Obj(3) = create_cylinder(80, Oy1, 0, 20, 60, Obj(3));
-            Obj(4) = create_sphere(160, Oy2, Oz2, 30, Obj(4));
-    
-        case 43 % Dynamic case 3
-%             Obj(1) = create_cylinder(80 + 140*sin(rt/8/50), 0 + 140*cos(rt/8/50), 0, 20, 80, Obj(1));
-%             Obj(2) = create_sphere(80, 0, 0, 30, Obj(2));
-%             Obj(3) = create_cylinder(80 - 140*sin(rt/8/50), 0 - 140*cos(rt/8/50), 0, 20, 50, Obj(3));
-%             Obj(4) = create_cone(158, 30, 0, 45, 80, Obj(4));
-
-            Obj(1) = create_cylinder(150 + 70*sin(rt/8/70+pi/2), 0 + 70*cos(rt/8/70+pi/2), 0, 30, 80, Obj(1));
-            Obj(2) = create_cylinder(150 - 70*sin(rt/8/70+pi/2), 0 - 70*cos(rt/8/70+pi/2), 0, 30, 50, Obj(2));
-            Obj(3) = create_cylinder(150 + 50*sin(rt/8/70), 0 + 50*cos(rt/8/70), 0, 30, 80, Obj(3));
-            Obj(4) = create_cylinder(150 - 50*sin(rt/8/70), 0 - 50*cos(rt/8/70), 0, 30, 50, Obj(4));
-            
-    end
-
-    function Obj = create_sphere(x0, y0, z0, D, Obj)
-        
-        a = D/2;   b = D/2;   c = D/2;      % Object's axis length
-        p = 1;     q = 1;     r = 1;        % Index parameters
-       
-        % Object Shape Equation
-        Gamma = ((X - x0) / a).^(2*p) + ((Y - y0) / b).^(2*q) + ((Z - z0) / c).^(2*r);
-        % Differential
-        [dGdx, dGdy, dGdz] = calc_dG();
-        
-        n = [dGdx; dGdy; dGdz];
-        t = [dGdy; -dGdx; 0];
-%-----------------------------------------------------------------------
-        
-        % Save to Field
-        % Obj.origin(rt,:) = [x0, y0, z0];
-        Obj.origin(1,:) = [x0, y0, z0];
-        Obj.Gamma = Gamma;
-        Obj.n = n;
-        Obj.t = t;
-        Obj.a = a;
-        Obj.b = b;
-        Obj.c = c;
-        Obj.p = p;
-        Obj.q = q;
-        Obj.r = r;
-        Obj.Rstar = min([a,b,c]);
-        function [dGdx, dGdy, dGdz] = calc_dG()
-            dGdx = (2*p*((X - x0)/a).^(2*p - 1))/a;
-            dGdy = (2*q*((Y - y0)/b).^(2*q - 1))/b;
-            dGdz = (2*r*((Z - z0)/c).^(2*r - 1))/c;
-        end
-    end
-
-    function Obj = create_cylinder(x0, y0, z0, D, h, Obj)
-    
-        a = D/2;   b = D/2;   c = h;    % Object's axis length
-        p = 1;     q = 1;     r = 4;  % Index parameters
-     
-        % Object Shape Equation
-        Gamma = ((X - x0) / a).^(2*p) + ((Y - y0) / b).^(2*q) + ((Z - z0) / c).^(2*r);
-        
-        % Differential
-        [dGdx, dGdy, dGdz] = calc_dG();
-
-        n = [dGdx; dGdy; dGdz];
-        t = [dGdy; -dGdx; 0];
-
-
-        % Save to Field
-        Obj.origin(rt,:) = [x0, y0, z0]; 
-        Obj.Gamma = Gamma;
-        Obj.n = n;
-        Obj.t = t;
-        Obj.a = a;
-        Obj.b = b;
-        Obj.c = c;
-        Obj.p = p;
-        Obj.q = q;
-        Obj.r = r;
-        Obj.Rstar = min([a,b,c]);
-        function [dGdx, dGdy, dGdz] = calc_dG()
-            dGdx = (2*p*((X - x0)/a).^(2*p - 1))/a;
-            dGdy = (2*q*((Y - y0)/b).^(2*q - 1))/b;
-            dGdz = (2*r*((Z - z0)/c).^(2*r - 1))/c;
-        end    
-    end
-    
-    function Obj = create_cone(x0, y0, z0, D, h, Obj)
-             
-        a = D/2;   b = D/2;   c = h;    % Object's axis length
-        p = 1;     q = 1;     r = 0.5;  % Index parameters
-     
-        % Object Shape Equation
-        Gamma = ((X - x0) / a).^(2*p) + ((Y - y0) / b).^(2*q) + ((Z - z0) / c).^(2*r);
-        
-        % Differential
-        [dGdx, dGdy, dGdz] = calc_dG();
-        
-        % n and t
-        n = [dGdx; dGdy; dGdz];
-        t = [dGdy; -dGdx; 0];
-
-        % Save to Field
-        Obj.origin(rt,:) = [x0, y0, z0];
-        Obj.Gamma = Gamma;
-        Obj.n = n;
-        Obj.t = t;
-        Obj.a = a;
-        Obj.b = b;
-        Obj.c = c;
-        Obj.p = p;
-        Obj.q = q;
-        Obj.r = r;
-        Obj.Rstar = min([a,b,c]);
-        function [dGdx, dGdy, dGdz] = calc_dG()
-            dGdx = (2*p*((X - x0)/a).^(2*p - 1))/a;
-            dGdy = (2*q*((Y - y0)/b).^(2*q - 1))/b;
-            dGdz = (2*r*((Z - z0)/c).^(2*r - 1))/c;
-        end    
-    end
-     
-    function Obj = create_pipe(x0, y0, z0, D, h, Obj)
-             
-        a = D/2;   b = D/2;   c = h;    % Object's axis length
-        p = 2;     q = 2;     r = 2;  % Index parameters
-     
-        % Object Shape Equation
-        Gamma = ((X - x0) / a).^(2*p) + ((Y - y0) / b).^(2*q) + ((Z - z0) / c).^(2*r);
-        
-        % Differential
-        [dGdx, dGdy, dGdz] = calc_dG();
-
-        % n and t
-        n = [dGdx; dGdy; dGdz];
-        t = [dGdy; -dGdx; 0];
-        
-        % Save to Field
-        Obj.origin(rt,:) = [x0, y0, z0];
-        Obj.Gamma = Gamma;
-        Obj.n = n;
-        Obj.t = t;
-        Obj.a = a;
-        Obj.b = b;
-        Obj.c = c;
-        Obj.p = p;
-        Obj.q = q;
-        Obj.r = r; 
-        Obj.Rstar = min([a,b,c]);
-        function [dGdx, dGdy, dGdz] = calc_dG()
-            dGdx = (2*p*((X - x0)/a).^(2*p - 1))/a;
-            dGdy = (2*q*((Y - y0)/b).^(2*q - 1))/b;
-            dGdz = (2*r*((Z - z0)/c).^(2*r - 1))/c;
-        end
-    end
-
-    function Obj = create_ceiling(x0, y0, z0, D, h, Obj)
-             
-        z0 = z0 + h;
-        a = D/2;   b = D/2;   c = h;    % Object's axis length
-        p = 20;     q = 20;     r = 20;  % Index parameters
-     
-        % Object Shape Equation
-        Gamma = ((X - x0) / a).^(2*p) + ((Y - y0) / b).^(2*q) + ((Z - z0) / c).^(2*r);
-        
-        % Differential
-        [dGdx, dGdy, dGdz] = calc_dG();
-
-        % n and t
-        n = [dGdx; dGdy; dGdz];
-        t = [dGdy; -dGdx; 0];
-        
-        % Save to Field
-        Obj.origin(rt,:) = [x0, y0, z0];
-        Obj.Gamma = Gamma;
-        Obj.n = n;
-        Obj.t = t;
-        Obj.a = a;
-        Obj.b = b;
-        Obj.c = c;
-        Obj.p = p;
-        Obj.q = q;
-        Obj.r = r; 
-        Obj.Rstar = min([a,b,c]);
-        function [dGdx, dGdy, dGdz] = calc_dG()
-            dGdx = (2*p*((X - x0)/a).^(2*p - 1))/a;
-            dGdy = (2*q*((Y - y0)/b).^(2*q - 1))/b;
-            dGdz = (2*r*((Z - z0)/c).^(2*r - 1))/c;
-        end
-    end
-
-    
-end
-
-function elevationsInRadius = extractElevations(terrainMatrix, x, y, R)
-    [rows, cols] = size(terrainMatrix);
-
-    % Create a grid of coordinates
-    [X, Y] = meshgrid(1:cols, 1:rows);
-
-    % Calculate distances from the UAV location
-    distances = sqrt((X - x).^2 + (Y - y).^2);
-
-
-    % Create a logical mask for points within the radius
-    withinRadius = distances <= R;
-
-    % Use the mask to extract elevations
-    elevationsInRadius = terrainMatrix(withinRadius);
-
-    % Optionally, if you want to get the coordinates of the points as well
-    [rowsInRadius, colsInRadius] = find(withinRadius);
-    coordinatesInRadius = [rowsInRadius, colsInRadius];
-end

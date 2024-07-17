@@ -1,5 +1,5 @@
 % .-------------------------------------------------------------.
-% | Dynamic Autorouting Program for Multi-Agent Systems v.3.4   |
+% | Dynamic Autorouting Program for Multi-Agent Systems         |
 % | created by Komsun Tamanakijprasart and Dr.Sabyasachi Mondal |
 % '-------------------------------------------------------------'
 
@@ -11,7 +11,7 @@ saveVid = 0;
 psi_i = 0;          % [rad] Initial Yaw angle
 gamma_i = 0;        % [rad] Initial Pitch angle
 
-formation = 2;  % 1) Diagonal line 2) Star 3) Triangle 
+formation = 7;  % 1) Diagonal line 2) Star 3) Triangle 
                 % 4) Twisting star 5) Large twisting star
                 % 6) Horizontal line
 
@@ -63,8 +63,7 @@ agent5.Initialize(conf)
 
 
 % Set different destination
-followerDestin = gcs.CreateFormation(leader.GetItsDestination, no_uav, leader.itsCurrentAngle, formation);
-
+followerDestin = gcs.CreateFormation(leader.GetItsDestination, no_uav, leader.GetCurrentAngle,formation);
 ds1 = followerDestin(:,1)';
 ds2 = followerDestin(:,2)';
 ds3 = followerDestin(:,3)';
@@ -87,11 +86,11 @@ swarm = {leader, agent1, agent2, agent3, agent4, agent5};
 
 %% Main Loop
 leader.SetFlagComs(1)
-i = 0;
+rt = 0;
 while true
-    i = i+1;
+    rt = rt+1;
     % Synchronize time step
-    gcs.SetTimeStep(i)
+    gcs.SetTimeStep(rt)
 
     % Propagate Leader with DA
     leader.UpdateBasicUAV()
@@ -107,7 +106,7 @@ while true
     XL = leader.GetCurrentPos();
 
     % Create formation from leader's current position
-    pos2Fol = gcs.CreateFormation(XL, max_no_uav, leader.itsCurrentAngle, formation);
+    pos2Fol = gcs.CreateFormation(XL, no_uav, leader.GetCurrentAngle, formation);
 
     % Compute Consensus-Formation-Following for followers
     X_nei = consensus_func(X_nei, pos2Fol, XL_states, no_uav);
@@ -123,7 +122,7 @@ while true
             cuav = swarm{closestUav(j)};
             selectedUav{j}.flagIPN = 1;
             selectedUav{j}.gcsData = [cuav.GetCurrentPos,...
-                cuav.GetCurrentAngle, cuav.itsCruisingSpeed];   
+                cuav.GetCurrentAngle, cuav.cruisingSpeed];   
         end
     end
 
@@ -156,12 +155,12 @@ end
 
 %% Plotting
 colorList = ["#A2142F", "#4DBEEE", "#77AC30", "#7E2F8E","#EDB120"];
-leadTraj = leader.itsTrajectory;
-a1Traj = agent1.itsTrajectory;
-a2Traj = agent2.itsTrajectory;
-a3Traj = agent3.itsTrajectory;
-a4Traj = agent4.itsTrajectory;
-a5Traj = agent5.itsTrajectory;
+leadTraj = leader.trajectory;
+a1Traj = agent1.trajectory;
+a2Traj = agent2.trajectory;
+a3Traj = agent3.trajectory;
+a4Traj = agent4.trajectory;
+a5Traj = agent5.trajectory;
 a1destin = agent1.GetItsDestination();
 a2destin = agent2.GetItsDestination();
 a3destin = agent3.GetItsDestination();
@@ -241,7 +240,7 @@ if animation
 %         xlim([0 280])
 %         ylim([-100 100])
 %         zlim([0 100])
-        title(num2str(rt/100,'time = %4.2f s'), 'FontSize', 24)
+%         title(num2str(rt/100,'time = %4.2f s'), 'FontSize', 24)
     
         xlabel("X [m]",'FontSize', 24)
         ylabel("Y [m]",'FontSize', 24)

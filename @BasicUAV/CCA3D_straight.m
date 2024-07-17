@@ -3,16 +3,11 @@
 % | created by Komsun Tamanakijprasart                 |
 % '----------------------------------------------------'
 
-function [x_final, y_final, z_final, psi_final, gamma_final, timeSpent] = CCA3D_straight(obj, Wi, Wf, x0, y0, z0, psi0, gamma0, V, tuning)
+function [x, y, z, psi, gamma, timeSpent] = CCA3D_straight(obj, Wi, Wf, x0, y0, z0, psi0, gamma0, V, tuning)
 %  global dt
-dt = 0.01;   % worked
-% dt = 0.1;
-% dt = 1;    % Must less than IFDS's dt?
-% dt = 10;
+dt = 0.01;
 timeSpent = 0;
 animation = 0;
-limitYawAngle = "Off";    
-limitPitchAngle = "Off";
 %.. Time
 t(1) = 0 ;                 % Simulation Time [s]
 %.. Position and Velocity of UAV
@@ -123,21 +118,17 @@ check = 1;
         end
         
         % Limit turning angle
-        if limitYawAngle == "On"
-            if psi_d > pi/2
-                psi_d = pi/2;
-            elseif psi_d < -pi/2
-                psi_d = -pi/2;
-            end
+        if psi_d > pi/2
+            psi_d = pi/2;
+        elseif psi_d < -pi/2
+            psi_d = -pi/2;
         end
 
         % Limit pitching angle
-        if limitPitchAngle == "On"
-            if gamma_d > pi/2
-                gamma_d = pi/2;
-            elseif gamma_d < -pi/2
-                gamma_d = -pi/2;
-            end
+        if gamma_d > pi/2
+            gamma_d = pi/2;
+        elseif gamma_d < -pi/2
+            gamma_d = -pi/2;
         end
 
         % Step7

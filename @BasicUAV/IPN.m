@@ -10,10 +10,10 @@ function [uh, uv] = IPN(obj)
         disp(obj.name + ": ----------IPN for obstacle Activated!")
     end
     % Read uavs data
-    X     = obj.itsCurrentPos;
-    v     = obj.itsCruisingSpeed;
-    psi   = obj.itsCurrentAngle(1);
-    gamma = obj.itsCurrentAngle(2);
+    X     = obj.currentPos;
+    v     = obj.cruisingSpeed;
+    psi   = obj.currentAngle(1);
+    gamma = obj.currentAngle(2);
 
     X_obs     = obstacle(1:3);
     psi_obs   = obstacle(4);

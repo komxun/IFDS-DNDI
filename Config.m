@@ -1,24 +1,19 @@
 % .-------------------------------------------------------------.
-% | Dynamic Autorouting Program for Multi-Agent Systems v.4.1   |
+% | Dynamic Autorouting Program for Multi-Agent Systems v.3.4   |
 % | created by Komsun Tamanakijprasart and Dr.Sabyasachi Mondal |
 % '-------------------------------------------------------------'
 
 function tempStruct = Config()
 % ___________________Simulation Set-up Parameters__________________________
-% mapSpan = 3000;      % [m]
-mapSpan = 12548;
 fontSize = 20;
 saveVid = 0;
 animation = 0;              % Figure(69)m 1: see the simulation
-showDisp = 0;               % Show console display 1: on 0: off
-% tsim = 10;          % [s] simulation time LIMIT for the path (good: 400 | 100)
-% tsim = 400;     % Max number of waypoints
-tsim = 50;
-% rtsim = 50*100;                   % [s] (50) time for the whole scenario
-rtsim = 1;                   % [s] (50) time for the whole scenario
-dt = 1;                    % [s] simulation time step  % 30 good for ARENA(no)
+showDisp = 1;               % Show console display 1: on 0: off
+tsim = uint16(400);          % [s] simulation time for the path 
+N = 50*100;                   % [s] (50) time for the whole scenario 
+dt = 0.1;                    % [s] simulation time step
 simMode = uint8(2);          % 1: by time, 2: by target distance
-targetThresh = 100;          % [m] allowed error for final target distance 
+targetThresh = 2.5;          % [m] allowed error for final target distance 
 multiTarget = uint8(0);      % 1: multi-target 0: single-target
 
 scenelist = {'scene 1: 1 object', 'scene 2: 2 objects', 'scene 3: 3 objects',...
@@ -28,15 +23,13 @@ scene = listdlg('PromptString',{'Select your scenario.', ...
 % scene = 41;
 
 % ___________________Features Control Parameters___________________________
-useOptimizer = 0;  % 0:Off  1:Global optimized  2: Local optimized
-delta_g = 5;      % [m] Safeguarding distance (minimum allowed gap)
-env = "static";    % "static" "dynamic"
+useOptimizer = 0; % 0:Off  1:Global optimized  2: Local optimized
+delta_g = 15;            % [m] Safeguarding distance (minimum allowed gap)
 
 % ______________________IFDS Tuning Parameters_____________________________
 sf    = uint8(0);   % Shape-following demand (1=on, 0=off)
-rho0  = 2.5;          % Repulsive parameter (rho >= 0) 
-sigma0 = 0.1;      % Tangential parameter 
-% What's the minimum targetThresh according to rho0??
+rho0  = 1.5;          % Repulsive parameter (rho >= 0)
+sigma0 = 0.01;      % Tangential parameter 
 
 % Good: rho0 = 2, simga0 = 0.01
 % The algorihtm still doesnt work for overlapped objects
@@ -70,13 +63,12 @@ tuning = [kappa, delta, kd];
 
 % _______________________ UAV Parameters _________________________________
 C  = 10;             % [m/s] UAV cruising speed (30)
-% C = 20;
 
 % Save to table Param
 Param = table;
 Param.showDisp = showDisp;
 Param.tsim = tsim;
-Param.rtsim = rtsim;
+Param.rtsim = N;
 Param.dt = dt;
 Param.targetThresh = targetThresh;
 Param.simMode = simMode;
@@ -90,8 +82,6 @@ Param.useOptimizer = useOptimizer;
 Param.fontSize = fontSize;
 Param.saveVid = saveVid;
 Param.animation = animation;
-Param.mapSpan = mapSpan;
-Param.env = env;
 
 switch scene
     case 0, numObj = 1;
@@ -106,9 +96,8 @@ switch scene
     case 42, numObj = 4;
     case 43, numObj = 4;
 end
-numObj = numObj + 1;
 Param.numObj = numObj;
-Object(1:numObj) = struct('origin',zeros(rtsim,3),'Gamma',0,'n',[],'t',[],...
+Object(1:numObj) = struct('origin',zeros(N,3),'Gamma',0,'n',[],'t',[],...
 'a',0,'b',0,'c',0,'p',0,'q',0,'r',0,'Rstar',0);
 
 tempStruct = struct;
