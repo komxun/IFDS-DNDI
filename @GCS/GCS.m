@@ -6,7 +6,7 @@
 classdef GCS < handle
     properties (Access = public)
         numUAV (1,1) uint8
-        rIPN (1,1) single = 6  % m
+        rIPN (1,1) single = 2  % m
     end
 
     properties (Access = private)

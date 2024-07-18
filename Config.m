@@ -24,11 +24,11 @@ scene = listdlg('PromptString',{'Select your scenario.', ...
 
 % ___________________Features Control Parameters___________________________
 useOptimizer = 0; % 0:Off  1:Global optimized  2: Local optimized
-delta_g = 15;            % [m] Safeguarding distance (minimum allowed gap)
+delta_g = 2;            % [m] Safeguarding distance (minimum allowed gap)
 
 % ______________________IFDS Tuning Parameters_____________________________
 sf    = uint8(0);   % Shape-following demand (1=on, 0=off)
-rho0  = 1.5;          % Repulsive parameter (rho >= 0)
+rho0  = 2.5;          % Repulsive parameter (rho >= 0)
 sigma0 = 0.01;      % Tangential parameter 
 
 % Good: rho0 = 2, simga0 = 0.01

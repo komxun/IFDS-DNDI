@@ -16,12 +16,13 @@ classdef BasicUAV < handle   % < handle : pass the value by reference
         gcsData (1,6) double
         obsData (1,6) double
         cruisingSpeed (1,1) single 
+        rt (1,1) single {mustBeNonnegative} = 1
     end
 
     properties (Access = protected)
         pathOrigin (1,3) double
         destination (1,3) double
-        rt (1,1) single {mustBeNonnegative} = 1
+        
         currentPos (1,3) single
         currentState (1,6) single
         

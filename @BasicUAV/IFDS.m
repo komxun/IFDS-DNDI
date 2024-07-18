@@ -27,6 +27,8 @@ function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_f
                 yy = Wp(2,t);
                 zz = Wp(3,t);
 
+                Object = obj.create_scene(scene, Object, xx, yy, zz);
+
                 if norm([xx yy zz] - [xd yd zd]) < targetThresh
 %                     disp('Target destination reached!')
                     Wp = Wp(:,1:t);
@@ -77,6 +79,8 @@ function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_f
                 yy = Wp(2,t);
                 zz = Wp(3,t);
 
+                Object = obj.create_scene(scene, Object, xx, yy, zz);
+
                 if t>10000
                     break
                 end
@@ -97,8 +101,8 @@ function [Paths, Object, totalLength, foundPath] = IFDS(obj, rho0, sigma0, loc_f
             end
             
     end
-
-    % obj.DA.Object = Object;
+   
+%     obj.DA.Object = Object;
 
     %======================= post-Calculation =============================
 %     if foundPath == 1

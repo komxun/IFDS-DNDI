@@ -1,4 +1,5 @@
-function Object = create_scene(obj, num, Object, X, Y, Z, rt)
+function Object = create_scene(obj, num, Object, X, Y, Z)
+    rt = obj.rt;
     switch num
         case 0
             Object(1) = create_ceiling(100, 0, 50, 200, 10, Object(1));
@@ -77,6 +78,7 @@ function Object = create_scene(obj, num, Object, X, Y, Z, rt)
             Object(4) = create_cylinder(150 - 50*sin(rt/8/70), 0 - 50*cos(rt/8/70), 0, 30, 50, Object(4));
             
     end
+    
 
     function Obj = create_sphere(x0, y0, z0, D, Obj)
         
