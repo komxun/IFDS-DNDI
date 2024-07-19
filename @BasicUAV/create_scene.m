@@ -18,9 +18,9 @@ function Object = create_scene(obj, num, Object, X, Y, Z)
             % Obj(2) = create_sphere(120, -10, 0, 50, Obj(2));
     
         case 3 % 3 objects
-            Object(1) = create_cylinder(60, 5, 0, 30, 50, Object(1));
-            Object(2) = create_sphere(120, -10, 0, 50, Object(2));
-            Object(3) = create_cone(168, 0, 0, 25, 80, Object(3));
+            Object(1) = create_cone(90, 5, 0, 50, 80, Object(1));
+            Object(2) = create_cylinder(140, -40, 0, 40, 70, Object(2));
+            Object(3) = create_cylinder(152.5, 34, 0, 30, 90, Object(3));
 
         case 4 % single(complex) object
             Object(1) = create_cylinder(100, 5, 0, 25, 200, Object(1));
@@ -52,6 +52,15 @@ function Object = create_scene(obj, num, Object, X, Y, Z)
             Object(5) = create_cone(180,-70, -10, 150, 20, Object(5));
             Object(6) = create_cone(75,-75, -10, 150, 40, Object(6));
             Object(7) = create_cylinder(170, -6, 0, 34, 100, Object(7));
+        case 8
+            Object(1) = create_cone(90, 5, 0, 50, 80, Object(1));
+            Object(2) = create_cylinder(140, -40, 0, 40, 70, Object(2));
+            Object(3) = create_cylinder(152.5, 34, 0, 30, 90, Object(3));
+            Object(4) = create_pipe(200, 0, 0, 40, 90, Object(4));
+            Object(5) = create_pipe(220, -40, 0, 40, 40, Object(5));
+            Object(6) = create_cone(100,70,0,30,70,Object(6));
+            Object(7) = create_sphere(67, -63, 0, 50, Object(7));
+            Object(8) = create_sphere(50, 80, 0, 50, Object(8));
         case 41 % Dynamic case 1
             Object(1) = create_cylinder(100 + 50*sin(rt/8/50), 0 + 50*cos(rt/8/50), 0, 20, 80, Object(1));
             Object(2) = create_sphere(100, 0, 0, 30, Object(2));

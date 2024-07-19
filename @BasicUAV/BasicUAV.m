@@ -41,28 +41,47 @@ classdef BasicUAV < handle   % < handle : pass the value by reference
     methods (Access = public)
         % Constructor
         function obj = BasicUAV(x_i, y_i, z_i, psi_i, gamma_i)
+
+%             % Default Path's Starting location
+%             Xini = 20;
+%             Yini = 0;
+%             Zini = 30;
+% 
+%             % Default Target Destination
+%             Xfinal = 250;  % 270
+%             Yfinal = 0;
+%             Zfinal = 50;
+
+            % Starting location
+            Xini = 0;
+            Yini = -100;
+            Zini = 10;
+            
+            % Target Destination
+            Xfinal = 250;
+            Yfinal = 100;
+            Zfinal = 10;
+
             if nargin == 0  % Default
                 disp(obj.name + ": Using Default UAV Initial States...")
                 % Default UAV's Initial State
-                x_i = 20;
-                y_i = 20;
-                z_i = 30;
+%                 x_i = 20;
+%                 y_i = 20;
+%                 z_i = 30;
+%                 psi_i = 0;          % [rad] Initial Yaw angle
+%                 gamma_i = 0;        % [rad] Initial Pitch angle
+
+                % UAV's Initial State
+                x_i = 0;
+                y_i = Yini;
+                % y_i = 0;
+                z_i = 10;
                 psi_i = 0;          % [rad] Initial Yaw angle
                 gamma_i = 0;        % [rad] Initial Pitch angle
             end
             % Default UAV's name
             obj.name = "[Unnamed BasicUAV]";
             disp("* " + obj.name + " is created")
-
-            % Default Path's Starting location
-            Xini = 20;
-            Yini = 0;
-            Zini = 30;
-
-            % Default Target Destination
-            Xfinal = 250;  % 270
-            Yfinal = 0;
-            Zfinal = 50;
 
             % Default UAV's Cruising Speed [m/s]
             obj.cruisingSpeed = 10;

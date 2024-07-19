@@ -70,11 +70,11 @@ ds3 = followerDestin(:,3)';
 ds4 = followerDestin(:,4)';
 ds5 = followerDestin(:,5)';
 
-ds1 = leader.GetItsDestination + [0, 0, -6];
-ds2 = leader.GetItsDestination + [0, 0, -4];
-ds3 = leader.GetItsDestination + [0, 0, -2];
-ds4 = leader.GetItsDestination + [0, 0, 2];
-ds5 = leader.GetItsDestination + [0, 0, 4];
+ds1 = leader.GetItsDestination + [0, 0, 5];
+ds2 = leader.GetItsDestination + [0, 0, 10];
+ds3 = leader.GetItsDestination + [0, 0, 15];
+ds4 = leader.GetItsDestination + [0, 0, 20];
+ds5 = leader.GetItsDestination + [0, 0, 25];
 
 agent1.SetItsDestination(ds1(1), ds1(2), ds1(3))
 agent2.SetItsDestination(ds2(1), ds2(2), ds2(3))
