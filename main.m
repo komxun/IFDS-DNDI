@@ -90,6 +90,8 @@ X_nei = [agent1.GetCurrentState();
 
 swarm = {leader, agent1, agent2, agent3, agent4, agent5};
 
+refTrajs = {zeros(1,3), zeros(1,3), zeros(1,3), zeros(1,3), zeros(1,3)};
+
 %% Main Loop
 leader.SetFlagComs(1)
 rt = 0;
@@ -113,6 +115,10 @@ while true
 
     % Create formation from leader's current position
     pos2Fol = gcs.CreateFormation(XL, no_uav, leader.GetCurrentAngle, formation);
+    
+    for k = 1:no_uav
+        refTrajs{k} = [refTrajs{k}; pos2Fol(:,k)'];
+    end
 
     % Compute Consensus-Formation-Following for followers
     X_nei = consensus_func(X_nei, pos2Fol, XL_states, no_uav);
@@ -145,12 +151,19 @@ while true
     %     leader.SetFlagDanger(1)
     % end
 
+    % if rt >= 1300
+    %     leader.SetFlagComs(1)
+    % elseif rt >= 600
+    %     leader.SetFlagComs(0)
+    % end
+
+
     % Update FollowerUAV states
-    agent1.UpdateFollower(X_nei(1,:), leader.DA.Object, leader.GetFlagDanger);
-    agent2.UpdateFollower(X_nei(2,:), leader.DA.Object, leader.GetFlagDanger);
-    agent3.UpdateFollower(X_nei(3,:), leader.DA.Object, leader.GetFlagDanger);
-    agent4.UpdateFollower(X_nei(4,:), leader.DA.Object, leader.GetFlagDanger);
-    agent5.UpdateFollower(X_nei(5,:), leader.DA.Object, leader.GetFlagDanger);
+    agent1.UpdateFollower(X_nei(1,:), leader.DA.Object, leader.GetFlagDanger, leader.GetFlagComs);
+    agent2.UpdateFollower(X_nei(2,:), leader.DA.Object, leader.GetFlagDanger, leader.GetFlagComs);
+    agent3.UpdateFollower(X_nei(3,:), leader.DA.Object, leader.GetFlagDanger, leader.GetFlagComs);
+    agent4.UpdateFollower(X_nei(4,:), leader.DA.Object, leader.GetFlagDanger, leader.GetFlagComs);
+    agent5.UpdateFollower(X_nei(5,:), leader.DA.Object, leader.GetFlagDanger, leader.GetFlagComs);
 
     X_nei = [agent1.GetCurrentState();
              agent2.GetCurrentState();
@@ -185,6 +198,7 @@ plot3(a4Traj(1,:), a4Traj(2,:), a4Traj(3,:), 'LineWidth', 1.5, 'Color', colorLis
 plot3(a5Traj(1,:), a5Traj(2,:), a5Traj(3,:), 'LineWidth', 1.5, 'Color', colorList(5))
 [Gamma, Gamma_star] = PlotObject(leader.DA.Object, leader.DA.Param.Rg, rt, rt, XX, YY, ZZ, Gamma, Gamma_star);
     xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]'); 
+
 camlight
 
 axis equal
@@ -193,11 +207,11 @@ xlim([0 280])
 ylim([-100 100])
 zlim([0 100])
 
-% % Animation plot
+%% % Animation plot
 if animation
     fg = figure(101);
     fg.WindowState='maximized';
-    % 
+    
     % [Gamma, Gamma_star] = PlotObject(leader.DA.Object, leader.DA.Param.Rg, rt, rt, XX, YY, ZZ, Gamma, Gamma_star);
     %         xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]'); 
     %     camlight
@@ -252,8 +266,8 @@ if animation
         ylabel("Y [m]",'FontSize', 24)
         zlabel("Z [m]", 'FontSize', 24)
     
-%         [Gamma, Gamma_star] = PlotObject(leader.DA.Object, leader.DA.Param.Rg, rt, rt, XX, YY, ZZ, Gamma, Gamma_star);
-%             xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]'); 
+        % [Gamma, Gamma_star] = PlotObject(leader.DA.Object, leader.DA.Param.Rg, rt, rt, XX, YY, ZZ, Gamma, Gamma_star);
+        %     xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]'); 
     
         % [Gamma, Gamma_star] = PlotObject(leader.DA.Object, leader.DA.Param.Rg, length(leadTraj)-1, rt, XX, YY, ZZ, Gamma, Gamma_star);
         % camlight
@@ -350,6 +364,24 @@ ylabel("Relative distance (m)")
 title("Relative distance between UAVs VS Time")
 subtitle("Minimum allowed distance R_{min}= " + num2str(gcs.rIPN) + " m")
 
+%% Plot trajectory tracking
+figure()
+
+for j = 1:length(swarm)
+    subplot(3,1,1)
+    plot(swarm{j}.trajectory(1,:), swarm{j}.trajectory(2,:), 'LineWidth', 1.5)
+    hold on
+    xlabel("X [m]", 'FontSize', 20)
+    ylabel("Y [m]", 'FontSize', 20)
+
+    subplot(3,1,2)
+    plot(swarm{j}.trajectory(2,:), swarm{j}.trajectory(3,:), 'LineWidth', 1.5)
+    hold on
+
+    subplot(3,1,3)
+    plot(swarm{j}.trajectory(1,:), swarm{j}.trajectory(3,:), 'LineWidth', 1.5)
+    hold on
+end
 
 %% Animation Plot 2
 
@@ -378,7 +410,7 @@ function [Gamma, Gamma_star] = PlotObject(Object, Rg, i, N, X, Y, Z, Gamma, Gamm
             % fimplicit3(Gamma == 1,'EdgeColor','k','FaceAlpha',1,'MeshDensity',20), hold on
 %             fimplicit3(Gamma_star == 1, 'EdgeColor','k','FaceAlpha',0,'MeshDensity',20)
 %         else
-            fimplicit3(Gamma == 1,'EdgeColor','none','FaceAlpha',1,'MeshDensity',80, 'FaceColor', 'w'), hold on
+            fimplicit3(Gamma == 1,'EdgeColor','none','FaceAlpha',0.4,'MeshDensity',80, 'FaceColor', 'w'), hold on
 %             fimplicit3(Gamma_star == 1, 'EdgeColor','none','FaceAlpha',0.2,'MeshDensity',30, 'FaceColor', 'w')
 %         end
 

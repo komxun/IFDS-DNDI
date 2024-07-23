@@ -84,16 +84,12 @@ tic
            [rho0, sigma0] = path_optimizing(obj, destin, rt, Wp, Paths, Param, Object);
         end
         %------------------------------------------------
-        for t = 1:obj.DA.Param.tsim
-            xx = Wp(1,t);
-            yy = Wp(2,t);
-            zz = Wp(3,t);
-
-            DA.Object = obj.create_scene(scene, Object, xx, yy, zz);
-        end
-
-        if rt > 1 && ~isempty(obj.globalPath) && class(obj) ~= "FollowerUAV"
+        
+        if rt > 1 && ~isempty(obj.globalPath) && class(obj) == "BasicUAV"
             path2Follow{rt} = obj.globalPath;
+            for j = 1:length(obj.DA.Object)
+                Object(j).origin(rt,:) = obj.DA.Object(j).origin(rt-1,:);
+            end
             foundPath = 1;
         else
             % Compute the IFDS Algorithm
@@ -158,7 +154,7 @@ tic
 
             DA.Wp = Wp;
             DA.Paths{rt} = path2Follow{rt};
-%             DA.Object = Object;
+            DA.Object = Object;
             % Save into obj
             obj.DA = DA;
         end

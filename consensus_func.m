@@ -61,11 +61,11 @@ Y_dot = [XL_dot'; Y_dot_nei];%%%%%%%%%%%
 
 %% Gains
 
-% Ke1 = 5*eye(p);
-% Ke2 = 2*eye(p);
+Ke1 = 5*eye(p);
+Ke2 = 2*eye(p);
 
-Ke1 = 100*eye(p);
-Ke2 = 100*eye(p);
+% Ke1 = 100*eye(p);
+% Ke2 = 100*eye(p);
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%

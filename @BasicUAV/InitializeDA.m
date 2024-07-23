@@ -21,7 +21,7 @@ Paths = cell(1, tempStruct.Param.rtsim);
 traj = cell(1,2*2000);
 % traj{1} = [x_i, y_i, z_i];
 traj{1} = obj.currentPos;
-            
+
 Obstacle(tempStruct.Param.numObj) = struct('origin',zeros(tempStruct.Param.rtsim, 3),'Gamma',0,'Rstar',0);
 
 tempStruct.Obstacle = Obstacle;
