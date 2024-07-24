@@ -13,7 +13,7 @@ gamma_i = 0;        % [rad] Initial Pitch angle
 
 formation = 7;  % 1) Diagonal line 2) Star 3) Triangle 
                 % 4) Twisting star 5) Large twisting star
-                % 6) Horizontal line
+                % 6) Horizontal line 7) V-shape
 
 % Initialize GCS
 gcs = GCS;
@@ -90,7 +90,7 @@ X_nei = [agent1.GetCurrentState();
 
 swarm = {leader, agent1, agent2, agent3, agent4, agent5};
 
-refTrajs = {zeros(1,3), zeros(1,3), zeros(1,3), zeros(1,3), zeros(1,3)};
+refTrajs = cell(1,no_uav);
 
 %% Main Loop
 leader.SetFlagComs(1)
@@ -121,7 +121,7 @@ while true
     end
 
     % Compute Consensus-Formation-Following for followers
-    X_nei = consensus_func(X_nei, pos2Fol, XL_states, no_uav);
+    X_nei = consensus_func(X_nei, pos2Fol, XL_states, no_uav, swarm);
 
     % Check for IPN for collision avoidance among followerUAVs
     [ipnIdx, closestIdx] = gcs.CheckIPN([XL; X_nei(:,1:3)]);
@@ -151,11 +151,22 @@ while true
     %     leader.SetFlagDanger(1)
     % end
 
-    % if rt >= 1300
-    %     leader.SetFlagComs(1)
-    % elseif rt >= 600
-    %     leader.SetFlagComs(0)
-    % end
+    %==================================
+    if rt >= 1300
+        leader.SetFlagComs(1)
+    elseif rt >= 600
+        leader.SetFlagComs(0)
+    end
+
+    if rt == 500
+        agent1.SetFlagComs(0)
+        agent3.SetFlagComs(0)
+    end
+
+    if rt == 1500
+        agent1.SetFlagComs(1)
+    end
+
 
 
     % Update FollowerUAV states
@@ -364,28 +375,166 @@ ylabel("Relative distance (m)")
 title("Relative distance between UAVs VS Time")
 subtitle("Minimum allowed distance R_{min}= " + num2str(gcs.rIPN) + " m")
 
-%% Plot trajectory tracking
+%% Plot Actual trajectories 
 figure()
+subplot(3,5,[1 2 3; 6 7 8; 11 12 13])
+plot3(swarm{1}.trajectory(1,:), swarm{1}.trajectory(2,:), swarm{1}.trajectory(3,:), 'k','LineWidth', 1.5)
+hold on, grid on, grid minor
+axis equal
+set(gca, 'FontSize', 20)
+xlabel("X [m]", 'FontSize', 20)
+ylabel("Y [m]", 'FontSize', 20)
+zlabel("Z [m]", 'FontSize', 20)
 
 for j = 1:length(swarm)
-    subplot(3,1,1)
-    plot(swarm{j}.trajectory(1,:), swarm{j}.trajectory(2,:), 'LineWidth', 1.5)
+    
+
+    subplot(3,5,[1 2 3; 6 7 8; 11 12 13])
+    % plot3(refTrajs{j2}(:,1)', refTrajs{j2}(:,2)',  refTrajs{j2}(:,3)','-','LineWidth', 1.5)
+    if j>1
+        plot3(swarm{j}.trajectory(1,:), swarm{j}.trajectory(2,:), swarm{j}.trajectory(3,:), '-','LineWidth', 1.5, 'Color', colorList(j-1))
+    end
+
+    subplot(3,5,[4 5])
+    plot(swarm{1}.trajectory(1,:), swarm{1}.trajectory(2,:), 'k','LineWidth', 1.5)
     hold on
+    if j>1
+        plot(swarm{j}.trajectory(1,:), swarm{j}.trajectory(2,:), '-','LineWidth', 1.5, 'Color', colorList(j-1))
+    end
+    % plot(refTrajs{j2}(:,1)', refTrajs{j2}(:,2)', '-','LineWidth', 1.5)
     xlabel("X [m]", 'FontSize', 20)
     ylabel("Y [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
 
-    subplot(3,1,2)
-    plot(swarm{j}.trajectory(2,:), swarm{j}.trajectory(3,:), 'LineWidth', 1.5)
+    subplot(3,5,[9 10])
+    plot(swarm{1}.trajectory(2,:), swarm{1}.trajectory(3,:), 'k','LineWidth', 1.5)
     hold on
+    if j>1
+        plot(swarm{j}.trajectory(2,:), swarm{j}.trajectory(3,:), '-','LineWidth', 1.5, 'Color', colorList(j-1))
+    end
+    % plot(refTrajs{j2}(:,2)', refTrajs{j2}(:,3)', '-','LineWidth', 1.5)
+    xlabel("Y [m]", 'FontSize', 20)
+    ylabel("Z [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
 
-    subplot(3,1,3)
-    plot(swarm{j}.trajectory(1,:), swarm{j}.trajectory(3,:), 'LineWidth', 1.5)
+    subplot(3,5,[14 15])
+    plot(swarm{1}.trajectory(1,:), swarm{1}.trajectory(3,:), 'k','LineWidth', 1.5)
     hold on
+    if j>1
+        plot(swarm{j}.trajectory(1,:), swarm{j}.trajectory(3,:), '-','LineWidth', 1.5, 'Color', colorList(j-1))
+    end
+    % plot(refTrajs{j2}(:,1)', refTrajs{j2}(:,3)', '-','LineWidth', 1.5)
+    xlabel("X [m]", 'FontSize', 20)
+    ylabel("Z [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
 end
+sgtitle("Actual Formation Trajectories", "FontSize", 30)
 
-%% Animation Plot 2
+% Reference plot
+figure()
+subplot(3,5,[1 2 3; 6 7 8; 11 12 13])
+plot3(swarm{1}.trajectory(1,:), swarm{1}.trajectory(2,:), swarm{1}.trajectory(3,:), 'k','LineWidth', 1.5)
+hold on, grid on, grid minor
+axis equal
+set(gca, 'FontSize', 20)
+xlabel("X [m]", 'FontSize', 20)
+ylabel("Y [m]", 'FontSize', 20)
+zlabel("Z [m]", 'FontSize', 20)
 
-% relative_dist_plot
+for j = 1:length(swarm)
+
+    subplot(3,5,[1 2 3; 6 7 8; 11 12 13])
+    if j<=no_uav
+        plot3(refTrajs{j}(:,1)', refTrajs{j}(:,2)',  refTrajs{j}(:,3)','-','LineWidth', 1.5, 'Color', colorList(j))
+    end
+
+    subplot(3,5,[4 5])
+    plot(swarm{1}.trajectory(1,:), swarm{1}.trajectory(2,:), 'k','LineWidth', 1.5)
+    hold on
+    if j<=no_uav
+        plot(refTrajs{j}(:,1)', refTrajs{j}(:,2)', '-','LineWidth', 1.5, 'Color', colorList(j))
+    end
+    xlabel("X [m]", 'FontSize', 20)
+    ylabel("Y [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
+
+    subplot(3,5,[9 10])
+    plot(swarm{1}.trajectory(2,:), swarm{1}.trajectory(3,:), 'k','LineWidth', 1.5)
+    hold on
+    if j<=no_uav
+        plot(refTrajs{j}(:,2)', refTrajs{j}(:,3)', '-','LineWidth', 1.5, 'Color', colorList(j))
+    end
+    xlabel("Y [m]", 'FontSize', 20)
+    ylabel("Z [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
+
+    subplot(3,5,[14 15])
+    plot(swarm{1}.trajectory(1,:), swarm{1}.trajectory(3,:), 'k','LineWidth', 1.5)
+    hold on
+    if j<=no_uav
+        plot(refTrajs{j}(:,1)', refTrajs{j}(:,3)', '-','LineWidth', 1.5, 'Color', colorList(j))
+    end
+    xlabel("X [m]", 'FontSize', 20)
+    ylabel("Z [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
+end
+sgtitle("Referenced Formation Trajectories", "FontSize", 30)
+
+%% Plot Agent trajectories with lost coms ( 1 and 4 )
+
+figure()
+subplot(3,5,[1 2 3; 6 7 8; 11 12 13])
+plot3(swarm{1}.trajectory(1,:), swarm{1}.trajectory(2,:), swarm{1}.trajectory(3,:), 'k','LineWidth', 1.5)
+hold on, grid on, grid minor
+axis equal
+set(gca, 'FontSize', 20)
+xlabel("X [m]", 'FontSize', 20)
+ylabel("Y [m]", 'FontSize', 20)
+zlabel("Z [m]", 'FontSize', 20)
+
+pltAgent = [1,2,3,4,5];
+for j = 1:length(pltAgent)
+
+    
+    if j<no_uav
+        j2 = j+1;
+    else
+        j2 = no_uav;
+    end
+    subplot(3,5,[1 2 3; 6 7 8; 11 12 13])
+    % plot3(refTrajs{j2}(:,1)', refTrajs{j2}(:,2)',  refTrajs{j2}(:,3)','-','LineWidth', 1.5)
+    plot3(swarm{pltAgent(j)}.trajectory(1,:), swarm{pltAgent(j)}.trajectory(2,:), swarm{pltAgent(j)}.trajectory(3,:), '--','LineWidth', 1.5, 'Color', colorList(pltAgent(j)))
+
+    subplot(3,5,[4 5])
+    plot(swarm{1}.trajectory(1,:), swarm{1}.trajectory(2,:), 'k-','LineWidth', 1.5)
+    hold on
+    plot(swarm{pltAgent(j)}.trajectory(1,:), swarm{pltAgent(j)}.trajectory(2,:), '--','LineWidth', 1.5, 'Color', colorList(pltAgent(j)))
+    % plot(refTrajs{j2}(:,1)', refTrajs{j2}(:,2)', '-','LineWidth', 1.5)
+    xlabel("X [m]", 'FontSize', 20)
+    ylabel("Y [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
+
+    subplot(3,5,[9 10])
+    plot(swarm{1}.trajectory(2,:), swarm{1}.trajectory(3,:), 'k-','LineWidth', 1.5)
+    hold on
+    plot(swarm{pltAgent(j)}.trajectory(2,:), swarm{pltAgent(j)}.trajectory(3,:), '--','LineWidth', 1.5, 'Color', colorList(pltAgent(j)))
+    % plot(refTrajs{j2}(:,2)', refTrajs{j2}(:,3)', '-','LineWidth', 1.5)
+    xlabel("Y [m]", 'FontSize', 20)
+    ylabel("Z [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
+
+    subplot(3,5,[14 15])
+    plot(swarm{1}.trajectory(1,:), swarm{1}.trajectory(3,:), 'k-','LineWidth', 1.5)
+    hold on
+    plot(swarm{pltAgent(j)}.trajectory(1,:), swarm{pltAgent(j)}.trajectory(3,:), '--','LineWidth', 1.5, 'Color', colorList(pltAgent(j)))
+    % plot(refTrajs{j2}(:,1)', refTrajs{j2}(:,3)', '-','LineWidth', 1.5)
+    xlabel("X [m]", 'FontSize', 20)
+    ylabel("Z [m]", 'FontSize', 20)
+    set(gca, 'FontSize', 20)
+end
+sgtitle("Agent 1 and 4 Trajectories", "FontSize", 30)
+
+
 
 %% Functions
 
