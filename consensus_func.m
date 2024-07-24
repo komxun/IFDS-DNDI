@@ -1,4 +1,4 @@
-function X = consensus_func(X_nei, XL_pos_to_fol, XL_states, no_uav)
+function X = consensus_func(X_nei, XL_pos_to_fol, XL_states, no_uav, swarm)
 
 %%%%============================================%%%%
 % This function runs on the ground station in a    %
@@ -7,9 +7,9 @@ function X = consensus_func(X_nei, XL_pos_to_fol, XL_states, no_uav)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  Position tracking and velocity consensus             %               
-%  X_nei:            includes the ith agent's states    %
-%  XL_pos_to_fol:    contains positon for all followers %
-%  XL_states:        States of leader x y z Vx Vy Vz    %
+%  X_nei (no_uav x 6):            includes the ith agent's states    %
+%  XL_pos_to_fol (3 x no_uav):    contains positon for all followers %
+%  XL_states (1 x 6) :        States of leader [x, y, z, Vx, Vy, Vz]    %
 %  comms:            1-communication exists or not (0)  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -29,18 +29,33 @@ N = 1;
 %     1	1	1	0	0];
 
 A=[0	0	1	0	0;
-    0	0	0	0	1;
-    1	0	0	1	1;
-    1	0	0	0	0;
-    0	1	1	0	0];
-A = eye(5);
+   0	0	0	0	1;
+   1	0	0	1	1;
+   1	0	0	0	0;
+   0	1	1	0	0];
+
+% A=[0	1	1	1	1;
+%    1	0	1	1	1;
+%    1	1	0	1	1;
+%    1	1	1	0	1;
+%    1	1	1	1	0];
+% A = eye(5);
 
 
 % Leader comms
-lead_fol_con = [3 5 2 4 2];
-% lead_fol_con = [0 1  1 0 1];
+% lead_fol_con = [3 5 2 4 2];
+lead_fol_con = [0 1  0 0 0]*1e6;
+% lead_fol_con = [0 1 1 0 1]*1e6;
+
+% lead_fol_con = double([swarm{2}.GetFlagComs, ...
+%                 swarm{3}.GetFlagComs, ...
+%                 swarm{4}.GetFlagComs, ...
+%                 swarm{5}.GetFlagComs, ...
+%                 swarm{6}.GetFlagComs]) * double(swarm{1}.GetFlagComs) * 1e3;
+
 
 p  = length(X_nei(1,1:3));
+
 
 %% Extracting leader info
 
@@ -48,16 +63,23 @@ XL_dot = XL_states(4:6);
 
 %% Loading variables
 
-Y_nei = X_nei(1,1:3)';                              %%% position
+Y_nei = X_nei(1,1:3)';                              %%% (15 x 1) position
 for i = 2:1:no_uav
     Y_nei = [Y_nei;X_nei(i,1:3)'];
 end
-Y_dot_nei = X_nei(1,4:6)';                          %%%% velocity
+
+% Y_nei = XL_pos_to_fol(:,1);                              %%% (15 x 1) position
+% for i = 2:1:no_uav
+%     Y_nei = [Y_nei;XL_pos_to_fol(:,i)];
+% end
+
+
+Y_dot_nei = X_nei(1,4:6)';                          %%%% (15 x 1) velocity
 for i = 2:1:no_uav
     Y_dot_nei = [Y_dot_nei;X_nei(i,4:6)'];
 end
 
-Y_dot = [XL_dot'; Y_dot_nei];%%%%%%%%%%%
+Y_dot = [XL_dot'; Y_dot_nei];   %%%%%%%%%%%      (18 x 1)
 
 %% Gains
 
@@ -72,9 +94,11 @@ Ke2 = 2*eye(p);
 %%%% Main loop starts %%%
 %%%%%%%%%%%%%%%%%%%%%%%%%
 
+X = zeros(no_uav, 6);
+er = zeros(no_uav, 3);
+er_dot = zeros(no_uav, 3);
+gcs = GCS;
 for i=1:1:N    %% N=1 function will run at every time instant
-
-    Y_hold = Y_nei;
 
     for j = 1:1:no_uav
 
@@ -90,7 +114,7 @@ for i=1:1:N    %% N=1 function will run at every time instant
         a_I = [ g_I kron(A(j,:),eye(p))];
 
         %%%%%%%%% error calc %%%%%%%%%%%%
-        Y = [XL_pos_to_fol(:,j) ; Y_hold];          %%% put leader position alongwith the followers
+        Y = [XL_pos_to_fol(:,j) ; Y_nei];          %%% (18 x 1) put leader position alongwith the followers
 
         er(j,:)     = (d_I+g_I)*y-a_I*Y;            %%%% cons error
         er_dot(j,:) = (d_I+g_I)*y_dot - a_I*Y_dot;  %%%% error dot
@@ -108,6 +132,7 @@ for i=1:1:N    %% N=1 function will run at every time instant
         Uu(j,:) = U';
         
     end
+    
      
         %%%%% Store for trajectory  %%%%%
 
