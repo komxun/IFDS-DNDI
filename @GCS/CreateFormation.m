@@ -73,18 +73,17 @@ function pos2Follow = CreateFormation(obj, XL, no_uav, leaderAngle, option)
                 error("Number of UAVs must be 5 for this formation")
             end
         case 6 % Horizontal Line with equal y-distance
-            % d = 7;
+            d = 5;
 %             d = 50;
 %             d = 15;
             % d = 1000;
-            d = 200;
             for i = 1:1:no_uav 
                 pos2Follow(:,i) = [XL(1); 
                                XL(2) + d*(-1)^(i+1)*i*1; 
                                XL(3)];
             end
         case 7 % Planar V-shape
-            d = 5;
+            d = 15;
             for i = 1:1:no_uav
                 pos2Follow(:,i) = [XL(1) - d*i*sind(60);
                                    XL(2) + d*i*cosd(60)*(-1)^i;
