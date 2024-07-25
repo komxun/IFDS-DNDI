@@ -83,10 +83,14 @@ function pos2Follow = CreateFormation(obj, XL, no_uav, leaderAngle, option)
                                XL(3)];
             end
         case 7 % Planar V-shape
-            d = 15;
+            d = 10;
+
             for i = 1:1:no_uav
-                pos2Follow(:,i) = [XL(1) - d*i*sind(60);
-                                   XL(2) + d*i*cosd(60)*(-1)^i;
+                if mod(i-1, 2)==0 && i~=1
+                    d = d + 10;
+                end
+                pos2Follow(:,i) = [XL(1) - d*sind(60);
+                                   XL(2) + d*cosd(60)*(-1)^i;
                                    XL(3)];
             end
     end
