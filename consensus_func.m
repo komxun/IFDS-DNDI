@@ -28,30 +28,38 @@ N = 1;
 %     0	0	1	0	0;
 %     1	1	1	0	0];
 
-A=[0	0	1	0	0;
-   0	0	0	0	1;
-   1	0	0	1	1;
-   1	0	0	0	0;
-   0	1	1	0	0];
+% A=[0	0	1	0	0;
+%    0	0	0	0	1;
+%    1	0	0	1	1;
+%    1	0	0	0	0;
+%    0	1	1	0	0];
 
-% A=[0	1	1	1	1;
-%    1	0	1	1	1;
-%    1	1	0	1	1;
-%    1	1	1	0	1;
-%    1	1	1	1	0];
+% A=[0	1	1	0	0;
+%    1	0	0	0	1;
+%    1	0	0	1	1;
+%    1	0	0	0	0;
+%    0	1	1	0	0];
+
+A=[0	1	1	1	1;
+   1	0	1	1	1;
+   1	1	0	1	1;
+   1	1	1	0	1;
+   1	1	1	1	0];
 % A = eye(5);
 
 
 % Leader comms
 % lead_fol_con = [3 5 2 4 2];
-lead_fol_con = [0 1  0 0 0]*1e6;
-% lead_fol_con = [0 1 1 0 1]*1e6;
+% lead_fol_con = [0 1  0 0 1]*10;
+lead_fol_con = [1 1 1 1 1]*10;
+
+% lead_fol_con = [1 0 0 0 0]*10;
 
 % lead_fol_con = double([swarm{2}.GetFlagComs, ...
 %                 swarm{3}.GetFlagComs, ...
 %                 swarm{4}.GetFlagComs, ...
 %                 swarm{5}.GetFlagComs, ...
-%                 swarm{6}.GetFlagComs]) * double(swarm{1}.GetFlagComs) * 1e3;
+%                 swarm{6}.GetFlagComs]) * double(swarm{1}.GetFlagComs) * 1e3
 
 
 p  = length(X_nei(1,1:3));
@@ -83,11 +91,11 @@ Y_dot = [XL_dot'; Y_dot_nei];   %%%%%%%%%%%      (18 x 1)
 
 %% Gains
 
-Ke1 = 5*eye(p);
-Ke2 = 2*eye(p);
+% Ke1 = 5*eye(p);
+% Ke2 = 2*eye(p);
 
-% Ke1 = 100*eye(p);
-% Ke2 = 100*eye(p);
+Ke1 = 100*eye(p);
+Ke2 = 100*eye(p);
 
 %%
 %%%%%%%%%%%%%%%%%%%%%%%%%
