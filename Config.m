@@ -22,7 +22,7 @@ multiTarget = uint8(0);      % 1: multi-target 0: single-target
 %     '(Only one option can be', 'selected at a time)'},'ListString',scenelist);
 
 % scene = 8;
-scene = 2;
+scene = 8;
 % scene = 41;
 
 % ___________________Features Control Parameters___________________________

@@ -152,20 +152,20 @@ while true
     % end
 
     %==================================
-    % if rt >= 1300
-    %     leader.SetFlagComs(1)
-    % elseif rt >= 600
-    %     leader.SetFlagComs(0)
-    % end
-    % 
-    % if rt == 500
-    %     agent1.SetFlagComs(0)
-    %     agent3.SetFlagComs(0)
-    % end
-    % 
-    % if rt == 1500
-    %     agent1.SetFlagComs(1)
-    % end
+    if rt >= 1300
+        leader.SetFlagComs(1)
+    elseif rt >= 600
+        leader.SetFlagComs(0)
+    end
+    
+    if rt == 500
+        agent1.SetFlagComs(0)
+        agent3.SetFlagComs(0)
+    end
+    
+    if rt == 1500
+        agent1.SetFlagComs(1)
+    end
 
 
 
