@@ -18,9 +18,15 @@ classdef FollowerUAV < BasicUAV
         end
         
         function UpdateFollower(obj, state, Object, leaderFlagDanger, leaderFlagComs)
-            obj.CheckDanger(Object) 
+%             obj.CheckDanger(Object) 
 
-            if (obj.flagDanger == 0) && (leaderFlagDanger == 0) %&& (leaderFlagComs == 1) && (obj.flagComsAvailable == 1)
+%             if (obj.flagDanger == 0) && (leaderFlagDanger == 0) %&& (leaderFlagComs == 1) && (obj.flagComsAvailable == 1)
+%                 obj.Follow(state)
+%             else
+%                 obj.UpdateDA()
+%             end
+
+            if (leaderFlagComs == 1) && (obj.flagComsAvailable == 1)
                 obj.Follow(state)
             else
                 obj.UpdateDA()
