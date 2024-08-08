@@ -54,9 +54,9 @@ function Object = create_scene(obj, num, Object, X, Y, Z)
             Object(7) = create_cylinder(170, -6, 0, 34, 100, Object(7));
         case 8
             Object(1) = create_cone(90, 5, 0, 50/1.5, 80, Object(1));
-            Object(2) = create_cylinder(140, -40, 0, 40/1.5, 70, Object(2));
-            Object(3) = create_cylinder(152.5, 34, 0, 30/1.5, 90, Object(3));
-            Object(4) = create_pipe(200, 0, 0, 40/1.5, 90, Object(4));
+            Object(2) = create_cylinder(150, -10, 0, 40/1.5, 70, Object(2));
+            Object(3) = create_cylinder(152.5, 50, 0, 30/1.5, 90, Object(3));
+            Object(4) = create_pipe(210, 30, 0, 40/1.5, 90, Object(4));
             Object(5) = create_pipe(220, -40, 0, 40/1.5, 40, Object(5));
             Object(6) = create_cone(100,70,0,30/1.5,70,Object(6));
             Object(7) = create_sphere(67, -63, 0, 50, Object(7));
