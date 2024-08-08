@@ -92,6 +92,8 @@ swarm = {leader, agent1, agent2, agent3, agent4, agent5};
 
 refTrajs = cell(1,no_uav);
 
+comsHistory = [1,1,1,1,1,1];
+
 %% Main Loop
 leader.SetFlagComs(1)
 rt = 0;
@@ -168,6 +170,11 @@ while true
     end
 
 
+    comsHistory = [comsHistory;
+                   swarm{1}.GetFlagComs, swarm{2}.GetFlagComs, swarm{3}.GetFlagComs, ... 
+                   swarm{4}.GetFlagComs, swarm{5}.GetFlagComs, swarm{6}.GetFlagComs];
+
+
 
     % Update FollowerUAV states
     agent1.UpdateFollower(X_nei(1,:), leader.DA.Object, leader.GetFlagDanger, leader.GetFlagComs);
@@ -224,48 +231,45 @@ if animation
     fg = figure(101);
     fg.WindowState='maximized';
     
-    [Gamma, Gamma_star] = PlotObject(leader.DA.Object, leader.DA.Param.Rg, rt, rt, XX, YY, ZZ, Gamma, Gamma_star);
-            xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]'); 
-        camlight
-    % for rt = 1:10:length(leadTraj)-1
-    for rt = 500
+%     [Gamma, Gamma_star] = PlotObject(leader.DA.Object, leader.DA.Param.Rg, rt, rt, XX, YY, ZZ, Gamma, Gamma_star);
+%             xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]'); 
+%         camlight
+    for rt = 1:10:length(leadTraj)-1
         
         plot3(leadTraj(1,rt), leadTraj(2,rt), leadTraj(3,rt), 'ok-', 'MarkerSize', 10, 'LineWidth', 1.5), hold on
-        plot3(a1Traj(1,rt), a1Traj(2,rt), a1Traj(3,rt), '>' ,'LineWidth', 1.5, 'Color', colorList(1)), hold on
-        plot3(a2Traj(1,rt), a2Traj(2,rt), a2Traj(3,rt), '>' ,'LineWidth', 1.5, 'Color', colorList(2))
-        plot3(a3Traj(1,rt), a3Traj(2,rt), a3Traj(3,rt), '>' ,'LineWidth', 1.5, 'Color', colorList(3))
-        plot3(a4Traj(1,rt), a4Traj(2,rt), a4Traj(3,rt), '>' ,'LineWidth', 1.5, 'Color', colorList(4))
-        plot3(a5Traj(1,rt), a5Traj(2,rt), a5Traj(3,rt), '>' ,'LineWidth', 1.5, 'Color', colorList(5))
     
         plot3(leadTraj(1,1:rt), leadTraj(2,1:rt), leadTraj(3,1:rt), 'k-', 'LineWidth', 1.5),
-        plot3(a1Traj(1,1:rt), a1Traj(2,1:rt), a1Traj(3,1:rt), '-' ,'LineWidth', 1.5, 'Color', colorList(1))
-        plot3(a2Traj(1,1:rt), a2Traj(2,1:rt), a2Traj(3,1:rt), '-' ,'LineWidth', 1.5, 'Color', colorList(2))
-        plot3(a3Traj(1,1:rt), a3Traj(2,1:rt), a3Traj(3,1:rt), '-' ,'LineWidth', 1.5, 'Color', colorList(3))
-        plot3(a4Traj(1,1:rt), a4Traj(2,1:rt), a4Traj(3,1:rt), '-' ,'LineWidth', 1.5, 'Color', colorList(4))
-        plot3(a5Traj(1,1:rt), a5Traj(2,1:rt), a5Traj(3,1:rt), '-' ,'LineWidth', 1.5, 'Color', colorList(5))
 
         %IFDS Path
         rt2 = ceil(rt/10);
-        plot3(leader.DA.Paths{rt}(1,:), leader.DA.Paths{rt}(2,:), leader.DA.Paths{rt}(3,:), 'b--' ,'LineWidth', 1.8)
-        if (rt<=length(agent1.DA.Paths)) && ~isempty(agent1.DA.Paths{rt})
-            plot3(agent1.DA.Paths{rt}(1,:), agent1.DA.Paths{rt}(2,:), agent1.DA.Paths{rt}(3,:), '--' , 'LineWidth', 1.2, 'Color', colorList(1))
-            scatter3(a1destin(1), a1destin(2), a1destin(3),'xr', 'sizedata', 150, 'LineWidth', 1.5)
-        end
-        if (rt<=length(agent2.DA.Paths)) && ~isempty(agent2.DA.Paths{rt})
-            plot3(agent2.DA.Paths{rt}(1,:), agent2.DA.Paths{rt}(2,:), agent2.DA.Paths{rt}(3,:), '--' ,'LineWidth', 1.2, 'Color', colorList(2))
-            scatter3(a2destin(1), a2destin(2), a2destin(3),'xr', 'sizedata', 150, 'LineWidth', 1.5)
-        end
-        if (rt<=length(agent3.DA.Paths)) && ~isempty(agent3.DA.Paths{rt})
-            plot3(agent3.DA.Paths{rt}(1,:), agent3.DA.Paths{rt}(2,:), agent3.DA.Paths{rt}(3,:), '--' ,'LineWidth', 1.2, 'Color', colorList(3))
-            scatter3(a3destin(1), a3destin(2), a3destin(3),'xr', 'sizedata', 150, 'LineWidth', 1.5)
-        end
-        if (rt<=length(agent4.DA.Paths)) && ~isempty(agent4.DA.Paths{rt})
-            plot3(agent4.DA.Paths{rt}(1,:), agent4.DA.Paths{rt}(2,:), agent4.DA.Paths{rt}(3,:), '--' ,'LineWidth', 1.2, 'Color', colorList(4))
-            scatter3(a4destin(1), a4destin(2), a4destin(3),'xr', 'sizedata', 150, 'LineWidth', 1.5)
-        end
-        if (rt<=length(agent5.DA.Paths)) && ~isempty(agent5.DA.Paths{rt})
-            plot3(agent5.DA.Paths{rt}(1,:), agent5.DA.Paths{rt}(2,:), agent5.DA.Paths{rt}(3,:), '--' ,'LineWidth', 1.2, 'Color', colorList(5))
-            scatter3(a5destin(1), a5destin(2), a5destin(3),'xr', 'sizedata', 150, 'LineWidth', 1.5)
+%         plot3(leader.DA.Paths{rt}(1,:), leader.DA.Paths{rt}(2,:), leader.DA.Paths{rt}(3,:), 'b--' ,'LineWidth', 1.8)
+        for j = 2:length(swarm)
+
+            % ======== Plot follower UAV =======================
+            plot3(swarm{j}.trajectory(1,rt), swarm{j}.trajectory(2,rt), swarm{j}.trajectory(3,rt), '>' ,'LineWidth', 1.5, 'Color', colorList(j-1))
+            % ======== Plot follower's trajectory =======================
+            plot3(swarm{j}.trajectory(1,1:rt), swarm{j}.trajectory(2,1:rt), swarm{j}.trajectory(3,1:rt), '-','LineWidth', 1.5, 'Color', colorList(j-1))
+
+%             if (rt<=length(swarm{j}.DA.Paths)) && ~isempty(swarm{j}.DA.Paths{rt})
+%                 plot3(swarm{j}.DA.Paths{rt}(1,:), swarm{j}.DA.Paths{rt}(2,:), swarm{j}.DA.Paths{rt}(3,:), '--' ,'LineWidth', 1.2, 'Color', colorList(j-1))
+%                 destin = swarm{j}.GetItsDestination;
+%                 scatter3(destin(1), destin(2), destin(3),'xr', 'sizedata', 150, 'LineWidth', 1.5)
+%             end
+
+
+            if comsHistory(rt,j) == 1 && comsHistory(rt,1) == 1
+                % Your two points
+                P1 = [swarm{1}.trajectory(:,rt)]';
+                P2 = [swarm{j}.trajectory(:,rt)]';
+                
+                % Their vertial concatenation is what you want
+                pts = [P1; P2];
+                
+                % Because that's what line() wants to see    
+                comsLine = line(pts(:,1), pts(:,2), pts(:,3));
+                comsLine.Color = "green";
+                comsLine.LineWidth = 1.5;
+            end
         end
 
         axis equal
@@ -274,6 +278,7 @@ if animation
 %         ylim([-100 100])
 %         zlim([0 100])
 %         title(num2str(rt/100,'time = %4.2f s'), 'FontSize', 24)
+        view(0,90)
     
         xlabel("X [m]",'FontSize', 24)
         ylabel("Y [m]",'FontSize', 24)
@@ -321,7 +326,7 @@ if animation
     end
 end
 
-%% Extra Plot
+%% Relative Distance Plot
 
 r12 = zeros(1,length(a1Traj));
 r13 = zeros(1,length(a1Traj));
@@ -504,19 +509,25 @@ sgtitle("Referenced Formation Trajectories", "FontSize", 30)
 
 
 %% Plot Journal
-tRange = 1000;
+tRange = 500;
+% for j =1:length(swarm)
+%     if swarm{j}.GetFlagComs == 1
+%         
+a1commStat = "Comm lost";
 figure()
-subplot(2,2,[1,3])
-MyPlot(swarm, tRange, 0)
-
-subplot(2,2,2)
-MyPlot(swarm, tRange, 0)
+subplot(2,6,[1:4,7:10])
+MyPlot(swarm, tRange, comsHistory, 0)
+title("Leader, Agent2, Agent4 are connected", 'Color', 'b')
+subtitle("*Lost connection from Agent1, Agent3", 'Color', 'r')
+subplot(2,6,5:6)
+MyPlot(swarm, tRange, comsHistory, 0)
 view(0,90)
 
-subplot(2,2,4)
+subplot(2,6,11:12)
 
-MyPlot(swarm, tRange, 1)
+MyPlot(swarm, tRange, comsHistory, 1)
 view(0,90)
+sgtitle(num2str(tRange/10,'Simulation time = %4.2f s'), 'FontSize', 30) 
 
 
 %% Plot Agent trajectories with lost coms ( 1 and 4 )
@@ -534,7 +545,6 @@ zlabel("Z [m]", 'FontSize', 20)
 pltAgent = [1,2,3,4,5];
 for j = 1:length(pltAgent)
 
-    
     if j<no_uav
         j2 = j+1;
     else

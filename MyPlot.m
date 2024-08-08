@@ -1,4 +1,4 @@
-function MyPlot(swarm, tRange, zoomIn)
+function MyPlot(swarm, tRange, comsHistory, zoomIn)
     syms XX YY ZZ Gamma(XX,YY,ZZ) Gamma_star(XX,YY,ZZ)
     colorList = ["#A2142F", "#4DBEEE", "#77AC30", "#7E2F8E","#EDB120"];
     for rt = tRange
@@ -30,7 +30,7 @@ function MyPlot(swarm, tRange, zoomIn)
             end
             
             % ++++++++ Plot Coms Link +++++++++++
-            if swarm{j}.GetFlagComs == 1 && swarm{1}.GetFlagComs == 1
+            if comsHistory(rt,j) == 1 && comsHistory(rt,1) == 1
                 % Your two points
                 P1 = [swarm{1}.trajectory(:,rt)]';
                 P2 = [swarm{j}.trajectory(:,rt)]';
@@ -44,8 +44,8 @@ function MyPlot(swarm, tRange, zoomIn)
                 comsLine.LineWidth = 1.5;
             end
             if zoomIn
-                xlim([swarm{1}.trajectory(1,tRange)-45, swarm{1}.trajectory(1,tRange)+45])
-                ylim([swarm{1}.trajectory(2,tRange)-40, swarm{1}.trajectory(2,tRange)+40])
+                xlim([swarm{1}.trajectory(1,tRange)-35, swarm{1}.trajectory(1,tRange)+35])
+                ylim([swarm{1}.trajectory(2,tRange)-30, swarm{1}.trajectory(2,tRange)+30])
             end
             zlim([0 100])
             xlabel("X [m]", 'FontSize', 20)
